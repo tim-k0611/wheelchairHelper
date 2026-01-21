@@ -1,0 +1,34 @@
+# Maven
+target/
+.mvn/
+mvnw
+mvnw.cmd
+
+# Node
+node_modules/
+src/main/frontend/node_modules/
+src/main/frontend/dist/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+.project
+.classpath
+.settings/
+
+# Git
+.git/
+.gitignore
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+application-local.properties
