@@ -1,6 +1,6 @@
 // API Helper für Backend-Kommunikation
 
-// Für Entwicklung: Vite Proxy leitet /api zu localhost:8083
+// Für Entwicklung: Vite Proxy leitet /api zu localhost:8080
 // Für Production: Gleiche Domain wie Frontend
 const API_BASE_URL = '/api/emergency';
 

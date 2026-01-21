@@ -11,7 +11,7 @@ export default defineConfig({
         proxy: {
             // Lokale Entwicklung: API-Calls zum Spring Boot Backend
             '/api': {
-                target: 'http://localhost:8083',
+                target: 'http://localhost:8080',
                 changeOrigin: true
             }
         }
