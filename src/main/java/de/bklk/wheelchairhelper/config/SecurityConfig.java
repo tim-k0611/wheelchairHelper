@@ -30,7 +30,17 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/emergency/health").permitAll() // Notfall-Endpoint öffentlich
-                        .requestMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css", "/favicon.ico").permitAll()
+                        .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/assets/**",           // ← Assets Ordner freigeben
+                                "/static/**",           // ← Falls statische Dateien hier sind
+                                "/*.js",                // ← Root JS Dateien
+                                "/*.css",               // ← Root CSS Dateien
+                                "/*.ico",               // ← Favicon
+                                "/*.png",               // ← Bilder
+                                "/*.svg"                // ← SVG Icons
+                        ).permitAll()
                         .requestMatchers("/api/**").authenticated()
                         .anyRequest().permitAll()
                 )
