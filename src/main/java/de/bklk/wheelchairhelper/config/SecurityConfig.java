@@ -30,6 +30,7 @@ public class SecurityConfig {
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/emergency/health").permitAll() // Notfall-Endpoint öffentlich
+                        .requestMatchers("/", "/index.html", "/assets/**", "/*.js", "/*.css", "/favicon.ico").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(supabaseAuthFilter, UsernamePasswordAuthenticationFilter.class);
