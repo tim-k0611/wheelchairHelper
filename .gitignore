@@ -8,3 +8,24 @@
 # Datasource local storage ignored files
 /dataSources/
 /dataSources.local.xml
+
+# Maven
+  target/
+  .mvn/
+  mvnw
+  mvnw.cmd
+
+  # Frontend
+  src/main/frontend/node_modules/
+  src/main/frontend/dist/
+  src/main/frontend/.env.local
+
+  # Secrets
+  application-local.properties
+  .env
+  .env.local
+
+  # IDEs
+  .idea/
+  *.iml
+  .vscode/
