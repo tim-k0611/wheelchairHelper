@@ -1,8 +1,11 @@
 package de.bklk.wheelchairhelper.web;
 
 import de.bklk.wheelchairhelper.model.EmergencyContact;
+import de.bklk.wheelchairhelper.model.UserInformation;
 import de.bklk.wheelchairhelper.service.EmailService;
 import de.bklk.wheelchairhelper.service.SupabaseService;
+import okhttp3.Response;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.SimpleMailMessage;
@@ -37,6 +40,38 @@ public class EmergencyController {
         }
     }
 
+    @PostMapping("/userinformation")
+    public ResponseEntity<?> saveUserInformation(@RequestBody UserInformation userInformation, Authentication authentication){
+        try{
+            String userId = (String) authentication.getPrincipal();
+            String userToken = (String) authentication.getCredentials();
+
+            UserInformation saved = supabaseService.saveUserInformation(userId, userToken, userInformation);
+
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Fehler beim Speichern: " +  e.getMessage()));
+        }
+    }
+
+    @GetMapping("/userinformation")
+    public ResponseEntity<?> getUserInformation(Authentication authentication){
+        try {
+            String userId = (String) authentication.getPrincipal();
+            String userToken = (String) authentication.getCredentials();
+
+            UserInformation userInformation = supabaseService.getUserInformation(userId, userToken);
+
+            if (userInformation == null) return ResponseEntity.notFound().build();
+
+            return ResponseEntity.ok(userInformation);
+        } catch(Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Fehler beim Aufrufen: " + e.getMessage()));
+        }
+    }
+
     /// Notfallkontakt abrufen
     @GetMapping("/contact")
     public ResponseEntity<?> getContact(Authentication authentication){
@@ -68,6 +103,7 @@ public class EmergencyController {
             }
 
             EmergencyContact contact = supabaseService.getEmergencyContact(userId, userToken);
+            UserInformation userInformation = supabaseService.getUserInformation(userId, userToken);
 
             if (contact == null){
                 return ResponseEntity.badRequest().body(Map.of("error", "Kein Notfallkontakt hinterlegt"));
@@ -77,7 +113,7 @@ public class EmergencyController {
             emailService.sendEmergencyNotification(
                     contact.getContactEmail(),
                     contact.getContactName(),
-                    "Benutzer " + userId
+                    userInformation.getFirstName() + " " + userInformation.getLastName()
             );
 
             return ResponseEntity.ok(Map.of(

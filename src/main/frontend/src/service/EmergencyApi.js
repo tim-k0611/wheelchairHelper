@@ -1,6 +1,6 @@
 // API Helper für Backend-Kommunikation
 
-// Für Entwicklung: Vite Proxy leitet /api zu localhost:8083
+// Für Entwicklung: Vite Proxy leitet /api zu localhost:8080
 // Für Production: Gleiche Domain wie Frontend
 const API_BASE_URL = '/api/emergency';
 
@@ -41,6 +41,21 @@ export const emergencyApi = {
     async getContact(token) {
         return fetchWithAuth(`${API_BASE_URL}/contact`, token, {
             method: 'GET'
+        });
+    },
+
+    //User Information laden
+    async getUserInformation(token) {
+        return fetchWithAuth(`${API_BASE_URL}/userinformation`, token, {
+            method: 'GET'
+        });
+    },
+
+    //User Information speichern
+    async saveUserInformation(userInformationData, token) {
+        return fetchWithAuth(`${API_BASE_URL}/userinformation`, token, {
+            method: 'POST',
+            body: JSON.stringify(userInformationData)
         });
     },
 

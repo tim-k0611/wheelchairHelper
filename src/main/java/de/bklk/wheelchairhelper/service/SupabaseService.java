@@ -2,8 +2,10 @@ package de.bklk.wheelchairhelper.service;
 
 import com.google.gson.Gson;
 import de.bklk.wheelchairhelper.model.EmergencyContact;
+import de.bklk.wheelchairhelper.model.UserInformation;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
+import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -34,12 +36,12 @@ public class SupabaseService {
         );
 
         Request request = new Request.Builder()
-                .url(supabaseUrl + "/rest/v1/emergency_contacts")
+                .url(supabaseUrl + "/rest/v1/emergency_contacts?on_conflict=user_id")
                 .post(body)
                 .addHeader("apikey", supabaseKey)
                 .addHeader("Authorization", "Bearer " + userToken)
                 .addHeader("Content-Type", "application/json")
-                .addHeader("Prefer", "return=representation")
+                .addHeader("Prefer", "resolution=merge-duplicates,return=representation")
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -49,6 +51,62 @@ public class SupabaseService {
             String responseBody = response.body().string();
             EmergencyContact[] contacts = gson.fromJson(responseBody, EmergencyContact[].class);
             return contacts.length > 0 ? contacts[0] : null;
+        }
+    }
+
+    // Userinformationen speichern/aktualisieren
+    public UserInformation saveUserInformation(String userId, String userToken, UserInformation userInformation) throws IOException {
+        userInformation.setUserId(userId);
+
+        String json = gson.toJson(userInformation);
+
+        RequestBody body = RequestBody.create(
+                json,
+                MediaType.parse("application/json")
+        );
+
+        Request request = new Request.Builder()
+                .url(supabaseUrl + "/rest/v1/user_information?on_conflict=user_id")
+                .post(body)
+                .addHeader("apikey", supabaseKey)
+                .addHeader("Authorization", "Bearer " + userToken)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Prefer", "resolution=merge-duplicates,return=representation")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Fehler beim Speichern: " + response.code());
+            }
+            if (response.body() != null) {
+                String responseBody = response.body().string();
+                UserInformation[] userInformations = gson.fromJson(responseBody, UserInformation[].class);
+                return userInformations.length > 0 ? userInformations[0] : null;
+            }
+            return null;
+        }
+    }
+
+    //Userinformationen abrufen
+    public UserInformation getUserInformation(String userId, String userToken) throws IOException {
+        Request request = new Request.Builder()
+                .url(supabaseUrl + "/rest/v1/user_information?user_id=eq." + userId)
+                .get()
+                .addHeader("apikey", supabaseKey)
+                .addHeader("Authorization", "Bearer " + userToken)
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                throw new IOException("Fehler beim Aufrufen: " + response.code());
+            }
+
+            if (response.body() != null) {
+                String responseBody = response.body().string();
+                UserInformation[] userInformations = gson.fromJson(responseBody, UserInformation[].class);
+                return userInformations.length > 0 ? userInformations[0] : null;
+            }
+            return null;
         }
     }
 

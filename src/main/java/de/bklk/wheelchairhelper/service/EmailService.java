@@ -18,7 +18,7 @@ public class EmailService {
         message.setText(
                 "Hallo " + recipientName + ",\n\n" +
                         "dies ist eine automatische Notfall-Benachrichtigung.\n\n" +
-                        "Ein Notfall-Signal wurde für " + userName + " ausgelöst.\n\n" +
+                        "Ein Notfall-Signal wurde für \"" + userName + "\" ausgelöst.\n\n" +
                         "Bitte nimm so schnell wie möglich Kontakt auf.\n\n" +
                         "---\n" +
                         "Diese Nachricht wurde automatisch generiert."
