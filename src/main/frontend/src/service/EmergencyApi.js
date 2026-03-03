@@ -44,6 +44,21 @@ export const emergencyApi = {
         });
     },
 
+    //User Information laden
+    async getUserInformation(token) {
+        return fetchWithAuth(`${API_BASE_URL}/userinformation`, token, {
+            method: 'GET'
+        });
+    },
+
+    //User Information speichern
+    async saveUserInformation(userInformationData, token) {
+        return fetchWithAuth(`${API_BASE_URL}/userinformation`, token, {
+            method: 'POST',
+            body: JSON.stringify(userInformationData)
+        });
+    },
+
     // Notfall auslösen
     async triggerEmergency(token) {
         return await fetchWithAuth(`${API_BASE_URL}/trigger`, token, {

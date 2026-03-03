@@ -11,6 +11,10 @@ const EmergencyContactApp = () => {
         contactEmail: '',
         contactPhone: ''
     });
+    const [userInformation, setUserInformation] = useState({
+        firstName: '',
+        lastName: ''
+    });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
     const [isLogin, setIsLogin] = useState(true);
@@ -28,6 +32,7 @@ const EmergencyContactApp = () => {
 
             if (session?.user) {
                 loadContact(session.access_token);
+                loadUserInfo(session.access_token);
             }
         });
 
@@ -63,6 +68,48 @@ const EmergencyContactApp = () => {
         }
     };
 
+    //Userinformation laden
+    const loadUserInfo = async (token) => {
+        try {
+            const data = await emergencyApi.getUserInformation(token);
+
+            if (data) {
+                setUserInformation({
+                    firstName: data.firstName,
+                    lastName: data.lastName
+                });
+            }
+        } catch (error) {
+            console.error('Fehler beim Laden: ', error);
+        }
+    };
+
+    // Userinformationen speichern
+    const saveUserInformation = async () => {
+        if (!userInformation.firstName || !userInformation.lastName) {
+            setMessage({ type: 'error', text: 'Bitte Vorname und Nachname ausfüllen' });
+            return;
+        }
+
+        if (!session?.access_token) {
+            setMessage({ type: 'error', text: 'Nicht angemeldet' });
+            return;
+        }
+
+        setLoading(true);
+        setMessage(null);
+
+        try {
+            await emergencyApi.saveUserInformation(userInformation, session.access_token);
+            setMessage({ type: 'success', text: '✅ Userinformationen gespeichert!' });
+        } catch (error) {
+            console.error('Save error:', error);
+            setMessage({ type: 'error', text: 'Fehler beim Speichern: ' + error.message });
+        }
+
+        setLoading(false);
+    };
+
     // Kontakt speichern
     const saveContact = async () => {
         if (!contact.contactName || !contact.contactEmail) {
@@ -92,7 +139,9 @@ const EmergencyContactApp = () => {
     // Trigger auslösen
     const trigger = async () => {
         try {
+            setLoading(true);
             const contact = await emergencyApi.getContact(session.access_token);
+            setLoading(false);
             if (!contact.userId) {
                 setMessage({type: 'error', text: 'Es wurde kein Notfallkontakt gefunden.'});
             } else {
@@ -142,6 +191,7 @@ const EmergencyContactApp = () => {
                     type: 'success',
                     text: '✅ Registrierung erfolgreich! Bitte bestätige deine E-Mail-Adresse.'
                 });
+                setIsLogin(true);
             }
 
         } catch (error) {
@@ -162,6 +212,7 @@ const EmergencyContactApp = () => {
         setSession(null);
         setContact({ contactName: '', contactEmail: '', contactPhone: '' });
         setMessage({ type: 'success', text: 'Erfolgreich abgemeldet' });
+        setCredentials({ email: '', password: '' });
     };
 
     if (!user) {
@@ -252,6 +303,60 @@ const EmergencyContactApp = () => {
                         >
                             Abmelden
                         </button>
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
+                    <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-2">
+                            <AlertCircle className="w-5 h-5 text-red-600" />
+                            <h2 className="text-xl font-bold text-gray-900">Eigene Daten hinterlegen:</h2>
+                        </div>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                <User className="w-4 h-4" />
+                                Vorname
+                            </label>
+                            <input
+                                type="text"
+                                value={userInformation.firstName}
+                                onChange={(e) => setUserInformation({...userInformation, firstName: e.target.value})}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                placeholder="Amar"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                <User className="w-4 h-4" />
+                                Vorname
+                            </label>
+                            <input
+                                type="text"
+                                value={userInformation.lastName}
+                                onChange={(e) => setUserInformation({...userInformation, lastName: e.target.value})}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                placeholder="Schlecken"
+                            />
+                        </div>
+
+                        <div>
+                            <button
+                                onClick={saveUserInformation}
+                                disabled={loading}
+                                className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                                {loading ? 'Speichere...' : (
+                                    <>
+                                        <CheckCircle className="w-5 h-5" />
+                                        Userdaten speichern
+                                    </>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
