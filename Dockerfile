@@ -5,6 +5,14 @@ FROM maven:3.9-eclipse-temurin-21 AS build
 
 WORKDIR /app
 
+# Build Arguments für Vite deklarieren
+ARG VITE_SUPABASE_URL
+ARG VITE_SUPABASE_ANON_KEY
+
+# Als ENV setzen, damit Vite sie beim Build liest
+ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
+ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+
 # Kopiere pom.xml und lade Dependencies (für besseres Caching)
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
