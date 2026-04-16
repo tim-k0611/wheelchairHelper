@@ -108,8 +108,7 @@ public class EmergencyController {
 
             /// E-Mail senden
             emailService.sendEmergencyNotification(
-                    contact.getContactEmail(),
-                    contact.getContactName(),
+                    contact,
                     userInformation.getFirstName() + " " + userInformation.getLastName()
             );
 

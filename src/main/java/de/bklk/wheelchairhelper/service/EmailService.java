@@ -1,5 +1,6 @@
 package de.bklk.wheelchairhelper.service;
 
+import de.bklk.wheelchairhelper.model.EmergencyContact;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -11,17 +12,27 @@ public class EmailService {
     @Autowired
     public JavaMailSender mailSender;
 
-    public void sendEmergencyNotification(String recipientEmail, String recipientName, String userName) {
+    public void sendEmergencyNotification(EmergencyContact contact, String userName) {
         SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(recipientEmail);
+        message.setTo(contact.getContactEmail());
         message.setSubject("🚨 Notfall-Benachrichtigung");
         message.setText(
-                "Hallo " + recipientName + ",\n\n" +
-                        "dies ist eine automatische Notfall-Benachrichtigung.\n\n" +
-                        "Ein Notfall-Signal wurde für \"" + userName + "\" ausgelöst.\n\n" +
-                        "Bitte nimm so schnell wie möglich Kontakt auf.\n\n" +
-                        "---\n" +
-                        "Diese Nachricht wurde automatisch generiert."
+            """
+            Hallo %s %s,
+            
+            dies ist eine automatische Notfall-Benachrichtigung.
+            
+            Ein Notfall-Signal wurde für "%s" ausgelöst.
+            
+            Bitte nimm so schnell wie möglich Kontakt auf.
+            
+            ---
+            Diese Nachricht wurde automatisch generiert.
+            """.formatted(
+                                    contact.getContactFirstName(),
+                                    contact.getContactName(),
+                                    userName
+            )
         );
 
         mailSender.send(message);
