@@ -18,6 +18,9 @@ public class EmergencyContact {
     @SerializedName("contact_name")
     private String contactName;
 
+    @SerializedName("contact_first_name")
+    private String contactFirstName;
+
     @SerializedName("contact_email")
     private String contactEmail;
 
@@ -29,15 +32,5 @@ public class EmergencyContact {
 
     @SerializedName("updated_at")
     private String updatedAt;
-}
-
-// DTO für API Requests
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-class EmergencyContactRequest {
-    private String contactName;
-    private String contactEmail;
-    private String contactPhone;
 }
 
