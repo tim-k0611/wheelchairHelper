@@ -18,6 +18,7 @@ const EmergencyContactApp = () => {
     });
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState(null);
+    const [userMessage, setUserMessage] = useState(null);
     const [isLogin, setIsLogin] = useState(true);
     const [credentials, setCredentials] = useState({ email: '', password: '' });
 
@@ -89,12 +90,12 @@ const EmergencyContactApp = () => {
     // Userinformationen speichern
     const saveUserInformation = async () => {
         if (!userInformation.firstName || !userInformation.lastName) {
-            setMessage({ type: 'error', text: 'Bitte Vorname und Nachname ausfüllen' });
+            setUserMessage({ type: 'error', text: 'Bitte Vorname und Nachname ausfüllen' });
             return;
         }
 
         if (!session?.access_token) {
-            setMessage({ type: 'error', text: 'Nicht angemeldet' });
+            setUserMessage({ type: 'error', text: 'Nicht angemeldet' });
             return;
         }
 
@@ -103,10 +104,10 @@ const EmergencyContactApp = () => {
 
         try {
             await emergencyApi.saveUserInformation(userInformation, session.access_token);
-            setMessage({ type: 'success', text: '✅ Userinformationen gespeichert!' });
+            setUserMessage({ type: 'success', text: '✅ Userinformationen gespeichert!' });
         } catch (error) {
             console.error('Save error:', error);
-            setMessage({ type: 'error', text: 'Fehler beim Speichern: ' + error.message });
+            setUserMessage({ type: 'error', text: 'Fehler beim Speichern: ' + error.message });
         }
 
         setLoading(false);
@@ -140,10 +141,9 @@ const EmergencyContactApp = () => {
 
     // Trigger auslösen
     const trigger = async () => {
+        setLoading(true);
         try {
-            setLoading(true);
             const contact = await emergencyApi.getContact(session.access_token);
-            setLoading(false);
             if (!contact.userId) {
                 setMessage({type: 'error', text: 'Es wurde kein Notfallkontakt gefunden.'});
             } else {
@@ -157,6 +157,7 @@ const EmergencyContactApp = () => {
                 console.error('Trigger error: ', error);
                 setMessage({ type: 'error', text: 'Fehler beim Triggern: ' + error.message })
         }
+        setLoading(false);
     }
 
     // Login/Registrierung
@@ -327,7 +328,7 @@ const EmergencyContactApp = () => {
                                 value={userInformation.firstName}
                                 onChange={(e) => setUserInformation({...userInformation, firstName: e.target.value})}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                                placeholder="Amar"
+                                placeholder="Max"
                             />
                         </div>
 
@@ -341,7 +342,7 @@ const EmergencyContactApp = () => {
                                 value={userInformation.lastName}
                                 onChange={(e) => setUserInformation({...userInformation, lastName: e.target.value})}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                                placeholder="Schlecken"
+                                placeholder="Mustermann"
                             />
                         </div>
 
@@ -359,6 +360,12 @@ const EmergencyContactApp = () => {
                                 )}
                             </button>
                         </div>
+
+                        {userMessage && (
+                            <div className={`mt-4 p-3 rounded-lg ${userMessage.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                                {userMessage.text}
+                            </div>
+                        )}
                     </div>
                 </div>
 
