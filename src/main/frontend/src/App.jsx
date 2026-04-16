@@ -8,6 +8,7 @@ const EmergencyContactApp = () => {
     const [session, setSession] = useState(null);
     const [contact, setContact] = useState({
         contactName: '',
+        contactFirstName: '',
         contactEmail: '',
         contactPhone: ''
     });
@@ -59,6 +60,7 @@ const EmergencyContactApp = () => {
             if (data) {
                 setContact({
                     contactName: data.contactName || '',
+                    contactFirstName: data.contactFirstName || '',
                     contactEmail: data.contactEmail || '',
                     contactPhone: data.contactPhone || ''
                 });
@@ -112,7 +114,7 @@ const EmergencyContactApp = () => {
 
     // Kontakt speichern
     const saveContact = async () => {
-        if (!contact.contactName || !contact.contactEmail) {
+        if (!contact.contactName || !contact.contactFirstName || !contact.contactEmail) {
             setMessage({ type: 'error', text: 'Bitte Name und E-Mail ausfüllen' });
             return;
         }
@@ -210,7 +212,7 @@ const EmergencyContactApp = () => {
         await authHelpers.signOut();
         setUser(null);
         setSession(null);
-        setContact({ contactName: '', contactEmail: '', contactPhone: '' });
+        setContact({ contactName: '', contactFirstName: '', contactEmail: '', contactPhone: '' });
         setMessage({ type: 'success', text: 'Erfolgreich abgemeldet' });
         setCredentials({ email: '', password: '' });
     };
@@ -374,14 +376,28 @@ const EmergencyContactApp = () => {
                         <div>
                             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                                 <User className="w-4 h-4" />
-                                Name des Kontakts
+                                Vorname
+                            </label>
+                            <input
+                                type="text"
+                                value={contact.contactFirstName}
+                                onChange={(e) => setContact({...contact, contactFirstName: e.target.value})}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
+                                placeholder="Max"
+                            />
+                        </div>
+
+                        <div>
+                            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                                <User className="w-4 h-4" />
+                                Nachname
                             </label>
                             <input
                                 type="text"
                                 value={contact.contactName}
                                 onChange={(e) => setContact({...contact, contactName: e.target.value})}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
-                                placeholder="Max Mustermann"
+                                placeholder="Mustermann"
                             />
                         </div>
 

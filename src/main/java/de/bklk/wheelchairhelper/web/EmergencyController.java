@@ -4,11 +4,8 @@ import de.bklk.wheelchairhelper.model.EmergencyContact;
 import de.bklk.wheelchairhelper.model.UserInformation;
 import de.bklk.wheelchairhelper.service.EmailService;
 import de.bklk.wheelchairhelper.service.SupabaseService;
-import okhttp3.Response;
-import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -111,8 +108,7 @@ public class EmergencyController {
 
             /// E-Mail senden
             emailService.sendEmergencyNotification(
-                    contact.getContactEmail(),
-                    contact.getContactName(),
+                    contact,
                     userInformation.getFirstName() + " " + userInformation.getLastName()
             );
 
