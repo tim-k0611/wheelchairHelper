@@ -1,16 +1,22 @@
 package de.bklk.wheelchairhelper.web;
 
-import de.bklk.wheelchairhelper.model.EmergencyContact;
-import de.bklk.wheelchairhelper.model.UserInformation;
+import de.bklk.wheelchairhelper.model.*;
 import de.bklk.wheelchairhelper.service.EmailService;
 import de.bklk.wheelchairhelper.service.SupabaseService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.Optional;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/emergency")
 public class EmergencyController {
@@ -118,6 +124,49 @@ public class EmergencyController {
             ));
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", "Fehler beim Versenden: " + e.getMessage()));
+        }
+    }
+
+    /// Gerät meldet sich existent
+    @PostMapping("/device/announce")
+    public ResponseEntity<?> announceDevice(@RequestBody DeviceAnnouncementRequest deviceRequest) {
+        log.info(deviceRequest.toString());
+        System.out.println(deviceRequest.toString());
+        try {
+            Optional<Device> existing = supabaseService.getDeviceById(deviceRequest.deviceId());
+            Device device = existing.orElseGet(() -> new Device(
+                    deviceRequest.deviceId(),
+                    Status.UNPAIRED,
+                    null
+            ));
+
+            Device saved = supabaseService.saveDevice(device);
+            return ResponseEntity.ok(saved);
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Fehler beim Speichern: " +  e.getMessage()));
+        }
+    }
+
+    @PostMapping("/user/pairing/start")
+    public ResponseEntity<?> startPairing(Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+        String userToken = (String) authentication.getCredentials();
+
+        try {
+            SecureRandom random = new SecureRandom();
+            int code = 1000 + random.nextInt(9000);
+            LocalDateTime now = LocalDateTime.now();
+
+            String expiresAt = now.plusMinutes(5).atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            PairingSession session = new PairingSession(userId, code, expiresAt);
+
+            PairingSession saved = supabaseService.savePairingSession(userToken, session);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Fehler beim Speichern: " +  e.getMessage()));
         }
     }
 

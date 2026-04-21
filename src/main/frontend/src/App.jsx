@@ -160,6 +160,26 @@ const EmergencyContactApp = () => {
         setLoading(false);
     }
 
+    // Pairing auslösen
+    const pairing = async () => {
+        setLoading(true);
+        try {
+            const pairingSession = await emergencyApi.startPairing(session.access_token);
+            if (!pairingSession) {
+                setMessage({type: 'error', text: 'Pairing-Session konnte nicht erstellt werden.'});
+            } else if (pairingSession.userId && pairingSession.code){
+                setMessage({
+                    type: 'success',
+                    text: `✅ Pairing-Session wurde erstellt. Der Code ist: ${pairingSession.code}`
+                });
+            }
+        }catch (error){
+            console.error('Pairing error: ', error);
+            setMessage({ type: 'error', text: 'Fehler beim Pairing: ' + error.message })
+        }
+        setLoading(false);
+    }
+
     // Login/Registrierung
     const handleAuth = async () => {
         if (!credentials.email || !credentials.password) {
@@ -214,7 +234,9 @@ const EmergencyContactApp = () => {
         setUser(null);
         setSession(null);
         setContact({ contactName: '', contactFirstName: '', contactEmail: '', contactPhone: '' });
+        setUserInformation({ firstName: '', lastName: ''});
         setMessage({ type: 'success', text: 'Erfolgreich abgemeldet' });
+        setUserMessage(null);
         setCredentials({ email: '', password: '' });
     };
 
@@ -335,7 +357,7 @@ const EmergencyContactApp = () => {
                         <div>
                             <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
                                 <User className="w-4 h-4" />
-                                Vorname
+                                Nachname
                             </label>
                             <input
                                 type="text"
@@ -455,6 +477,14 @@ const EmergencyContactApp = () => {
                             className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
                         >
                             {loading ? 'Trigger wird ausgelöst...' : 'Triggern'}
+                        </button>
+
+                        <button
+                            onClick={pairing}
+                            disabled={loading}
+                            className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {loading ? 'Pairing wird begonnen...' : 'Pairing starten'}
                         </button>
                     </div>
 

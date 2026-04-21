@@ -66,6 +66,12 @@ export const emergencyApi = {
         });
     },
 
+    async startPairing(token){
+        return await fetchWithAuth(`${API_BASE_URL}/user/pairing/start`, token, {
+            method: 'POST'
+        });
+    },
+
     // Health Check
     async healthCheck() {
         const response = await fetch(`${API_BASE_URL}/health`);

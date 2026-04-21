@@ -1,15 +1,15 @@
 package de.bklk.wheelchairhelper.service;
 
 import com.google.gson.Gson;
-import de.bklk.wheelchairhelper.model.EmergencyContact;
-import de.bklk.wheelchairhelper.model.UserInformation;
+import com.google.gson.annotations.SerializedName;
+import de.bklk.wheelchairhelper.model.*;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.*;
-import org.apache.catalina.User;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -161,7 +161,97 @@ public class SupabaseService {
         }
     }
 
+    public Optional<Device> getDeviceById(String deviceId) throws IOException {
+        Request request = new Request.Builder()
+                .url(supabaseUrl + "/rest/v1/devices?device_id=eq." + deviceId)
+                .get()
+                .addHeader("apikey", supabaseKey)
+                .addHeader("Authorization", "Bearer " + supabaseKey)
+                .addHeader("Accept", "application/json")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                String errorBody = response.body() != null ? response.body().string() : "kein body";
+                throw new IOException("Fehler beim Speichern: " + response.code() + " – " + errorBody);
+            }
+            if (response.body() != null) {
+                String body = response.body().string();
+                Device[] devices = gson.fromJson(body, Device[].class);
+                return devices.length > 0 ? Optional.of(devices[0]) : Optional.empty();
+            }
+            return Optional.empty();
+        }
+    }
+
+    public Device saveDevice(Device device) throws IOException{
+        DeviceInsert insert = new DeviceInsert(device.deviceId(), device.status());
+        RequestBody body = RequestBody.create(
+                gson.toJson(insert),
+                MediaType.parse("application/json")
+        );
+        log.info(body.toString());
+
+        Request request = new Request.Builder()
+                .url(supabaseUrl + "/rest/v1/devices?on_conflict=device_id")
+                .post(body)
+                .addHeader("apikey", supabaseKey)
+                .addHeader("Authorization", "Bearer " + supabaseKey)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Prefer", "resolution=merge-duplicates, return=representation")
+                .build();
+
+        try (Response response = client.newCall(request).execute()){
+            if (!response.isSuccessful()) {
+                String errorBody = response.body() != null ? response.body().string() : "kein body";
+                throw new IOException("Fehler beim Speichern: " + response.code() + " – " + errorBody);
+            }
+            if (response.body() != null) {
+                String responseBody = response.body().string();
+                Device[] devices = gson.fromJson(responseBody, Device[].class);
+                return devices.length > 0 ? devices[0] : null;
+            }
+            return null;
+        }
+    }
+
+    public PairingSession savePairingSession(String userToken, PairingSession session) throws IOException {
+        String json = gson.toJson(session);
+
+        RequestBody body = RequestBody.create(
+                json,
+                MediaType.parse("application/json")
+        );
+
+        Request request = new Request.Builder()
+                .url(supabaseUrl + "/rest/v1/pairing_sessions?on_conflict=user_id")
+                .post(body)
+                .addHeader("apikey", supabaseKey)
+                .addHeader("Authorization", "Bearer " + userToken)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Prefer", "resolution=merge-duplicates,return=representation")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                String errorBody = response.body() != null ? response.body().string() : "kein body";
+                throw new IOException("Fehler beim Speichern: " + response.code() + " – " + errorBody);
+            }
+            if (response.body() != null) {
+                String responseBody = response.body().string();
+                PairingSession[] sessions = gson.fromJson(responseBody, PairingSession[].class);
+                return sessions.length > 0 ? sessions[0] : null;
+            }
+            return null;
+        }
+    }
+
     private static class UserResponse {
         String id;
     }
+
+    private record DeviceInsert(
+            @SerializedName("device_id") String deviceId,
+            Status status
+    ) {}
 }
