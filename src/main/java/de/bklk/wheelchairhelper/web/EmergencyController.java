@@ -130,17 +130,17 @@ public class EmergencyController {
     /// Gerät meldet sich existent
     @PostMapping("/device/announce")
     public ResponseEntity<?> announceDevice(@RequestBody DeviceAnnouncementRequest deviceRequest) {
-        log.info(deviceRequest.toString());
-        System.out.println(deviceRequest.toString());
         try {
             Optional<Device> existing = supabaseService.getDeviceById(deviceRequest.deviceId());
-            Device device = existing.orElseGet(() -> new Device(
-                    deviceRequest.deviceId(),
-                    Status.UNPAIRED,
-                    null
-            ));
-
-            Device saved = supabaseService.saveDevice(device);
+            String lastAnnounce = LocalDateTime.now().atOffset(ZoneOffset.UTC)
+                    .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            Device saved;
+            if (existing.isPresent()) {
+                saved = supabaseService.updateDevice(deviceRequest.deviceId(), lastAnnounce);
+            } else {
+                Device device = new Device(deviceRequest.deviceId(), Status.UNPAIRED, null, lastAnnounce);
+                saved = supabaseService.saveDevice(device);
+            }
             return ResponseEntity.ok(saved);
 
         } catch (Exception e) {

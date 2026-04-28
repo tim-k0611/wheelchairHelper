@@ -9,6 +9,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 @Slf4j
@@ -185,12 +188,12 @@ public class SupabaseService {
     }
 
     public Device saveDevice(Device device) throws IOException{
-        DeviceInsert insert = new DeviceInsert(device.deviceId(), device.status());
+        DeviceInsert insert = new DeviceInsert(device.deviceId(), device.status(), device.lastAnnounce());
         RequestBody body = RequestBody.create(
                 gson.toJson(insert),
                 MediaType.parse("application/json")
         );
-        log.info(body.toString());
+        System.out.println(gson.toJson(insert));
 
         Request request = new Request.Builder()
                 .url(supabaseUrl + "/rest/v1/devices?on_conflict=device_id")
@@ -212,6 +215,27 @@ public class SupabaseService {
                 return devices.length > 0 ? devices[0] : null;
             }
             return null;
+        }
+    }
+
+    public Device updateDevice(String deviceId, String lastAnnounce) throws IOException {
+        String json = gson.toJson(new DeviceUpdate(lastAnnounce));
+        RequestBody body = RequestBody.create(json, MediaType.parse("application/json"));
+
+        Request request = new Request.Builder()
+                .url(supabaseUrl + "/rest/v1/devices?device_id=eq." + deviceId)
+                .patch(body)
+                .addHeader("apikey", supabaseKey)
+                .addHeader("Authorization", "Bearer " + supabaseKey)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Prefer", "return=representation")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            assert response.body() != null;
+            String responseBody = response.body().string();
+            Device[] devices = gson.fromJson(responseBody, Device[].class);
+            return devices.length > 0 ? devices[0] : null;
         }
     }
 
@@ -252,6 +276,11 @@ public class SupabaseService {
 
     private record DeviceInsert(
             @SerializedName("device_id") String deviceId,
-            Status status
+            Status status,
+            @SerializedName("last_announce") String lastAnnounce
+            ) {}
+
+    private record DeviceUpdate(
+            @SerializedName("last_announce") String lastAnnounce
     ) {}
 }
