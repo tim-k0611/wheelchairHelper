@@ -21,6 +21,9 @@ const EmergencyContactApp = () => {
     const [userMessage, setUserMessage] = useState(null);
     const [isLogin, setIsLogin] = useState(true);
     const [credentials, setCredentials] = useState({ email: '', password: '' });
+    const [pairingSession, setPairingSession] = useState(null);
+    const [availableDevices, setAvailableDevices] = useState([]);
+    const [pairingLoading, setPairingLoading] = useState(false);
 
     // Check für bestehende Session beim Laden
     useEffect(() => {
@@ -52,6 +55,18 @@ const EmergencyContactApp = () => {
         if (session?.access_token) {
             loadContact(session.access_token);
         }
+    };
+
+    const formatLastAnnounce = (timestamp) => {
+        if (!timestamp) return 'Unbekannt';
+        const date = new Date(timestamp);
+        const now = new Date();
+        const diffSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+        console.log('timestamp:', timestamp, 'diffSeconds:', diffSeconds);
+        if (diffSeconds < 10) return 'gerade eben';
+        if (diffSeconds < 60) return `vor ${diffSeconds} Sekunden`;
+        if (diffSeconds < 120) return 'vor 1 Minute';
+        return `vor ${Math.floor(diffSeconds / 60)} Minuten`;
     };
 
     // Notfallkontakt laden
@@ -165,20 +180,15 @@ const EmergencyContactApp = () => {
         setLoading(true);
         try {
             const pairingSession = await emergencyApi.startPairing(session.access_token);
-            if (!pairingSession) {
-                setMessage({type: 'error', text: 'Pairing-Session konnte nicht erstellt werden.'});
-            } else if (pairingSession.userId && pairingSession.code){
-                setMessage({
-                    type: 'success',
-                    text: `✅ Pairing-Session wurde erstellt. Der Code ist: ${pairingSession.code}`
-                });
-            }
-        }catch (error){
+            const devices = await emergencyApi.getAvailableDevices(session.access_token);
+            setPairingSession(pairingSession);
+            setAvailableDevices(devices);
+        } catch (error) {
             console.error('Pairing error: ', error);
-            setMessage({ type: 'error', text: 'Fehler beim Pairing: ' + error.message })
+            setMessage({ type: 'error', text: 'Fehler beim Pairing: ' + error.message });
         }
         setLoading(false);
-    }
+    };
 
     // Login/Registrierung
     const handleAuth = async () => {
@@ -258,7 +268,7 @@ const EmergencyContactApp = () => {
                             <input
                                 type="email"
                                 value={credentials.email}
-                                onChange={(e) => setCredentials({...credentials, email: e.target.value})}
+                                onChange={(e) => setCredentials({ ...credentials, email: e.target.value })}
                                 onKeyPress={(e) => e.key === 'Enter' && handleAuth()}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                 placeholder="deine@email.de"
@@ -270,7 +280,7 @@ const EmergencyContactApp = () => {
                             <input
                                 type="password"
                                 value={credentials.password}
-                                onChange={(e) => setCredentials({...credentials, password: e.target.value})}
+                                onChange={(e) => setCredentials({ ...credentials, password: e.target.value })}
                                 onKeyPress={(e) => e.key === 'Enter' && handleAuth()}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                 placeholder="••••••••"
@@ -331,6 +341,7 @@ const EmergencyContactApp = () => {
                     </div>
                 </div>
 
+                {/* Eigene Daten */}
                 <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
                     <div className="mb-6">
                         <div className="flex items-center gap-2 mb-2">
@@ -348,7 +359,7 @@ const EmergencyContactApp = () => {
                             <input
                                 type="text"
                                 value={userInformation.firstName}
-                                onChange={(e) => setUserInformation({...userInformation, firstName: e.target.value})}
+                                onChange={(e) => setUserInformation({ ...userInformation, firstName: e.target.value })}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                 placeholder="Max"
                             />
@@ -362,26 +373,24 @@ const EmergencyContactApp = () => {
                             <input
                                 type="text"
                                 value={userInformation.lastName}
-                                onChange={(e) => setUserInformation({...userInformation, lastName: e.target.value})}
+                                onChange={(e) => setUserInformation({ ...userInformation, lastName: e.target.value })}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                 placeholder="Mustermann"
                             />
                         </div>
 
-                        <div>
-                            <button
-                                onClick={saveUserInformation}
-                                disabled={loading}
-                                className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
-                            >
-                                {loading ? 'Speichere...' : (
-                                    <>
-                                        <CheckCircle className="w-5 h-5" />
-                                        Userdaten speichern
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                        <button
+                            onClick={saveUserInformation}
+                            disabled={loading}
+                            className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                        >
+                            {loading ? 'Speichere...' : (
+                                <>
+                                    <CheckCircle className="w-5 h-5" />
+                                    Userdaten speichern
+                                </>
+                            )}
+                        </button>
 
                         {userMessage && (
                             <div className={`mt-4 p-3 rounded-lg ${userMessage.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
@@ -391,8 +400,8 @@ const EmergencyContactApp = () => {
                     </div>
                 </div>
 
-                {/* Hauptformular */}
-                <div className="bg-white rounded-2xl shadow-lg p-8">
+                {/* Notfallkontakt */}
+                <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
                     <div className="mb-6">
                         <div className="flex items-center gap-2 mb-2">
                             <AlertCircle className="w-5 h-5 text-red-600" />
@@ -410,7 +419,7 @@ const EmergencyContactApp = () => {
                             <input
                                 type="text"
                                 value={contact.contactFirstName}
-                                onChange={(e) => setContact({...contact, contactFirstName: e.target.value})}
+                                onChange={(e) => setContact({ ...contact, contactFirstName: e.target.value })}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                 placeholder="Max"
                             />
@@ -424,7 +433,7 @@ const EmergencyContactApp = () => {
                             <input
                                 type="text"
                                 value={contact.contactName}
-                                onChange={(e) => setContact({...contact, contactName: e.target.value})}
+                                onChange={(e) => setContact({ ...contact, contactName: e.target.value })}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                 placeholder="Mustermann"
                             />
@@ -438,7 +447,7 @@ const EmergencyContactApp = () => {
                             <input
                                 type="email"
                                 value={contact.contactEmail}
-                                onChange={(e) => setContact({...contact, contactEmail: e.target.value})}
+                                onChange={(e) => setContact({ ...contact, contactEmail: e.target.value })}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                 placeholder="max@beispiel.de"
                             />
@@ -452,7 +461,7 @@ const EmergencyContactApp = () => {
                             <input
                                 type="tel"
                                 value={contact.contactPhone}
-                                onChange={(e) => setContact({...contact, contactPhone: e.target.value})}
+                                onChange={(e) => setContact({ ...contact, contactPhone: e.target.value })}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent"
                                 placeholder="+49 123 456789"
                             />
@@ -478,7 +487,72 @@ const EmergencyContactApp = () => {
                         >
                             {loading ? 'Trigger wird ausgelöst...' : 'Triggern'}
                         </button>
+                    </div>
 
+                    {message && (
+                        <div className={`mt-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
+                            {message.text}
+                        </div>
+                    )}
+                </div>
+
+                {/* Pairing */}
+                <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
+                    <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-2">
+                            <AlertCircle className="w-5 h-5 text-red-600" />
+                            <h2 className="text-xl font-bold text-gray-900">Gerät koppeln</h2>
+                        </div>
+                        <p className="text-gray-600">Verbinde deinen Rollstuhl mit deinem Account.</p>
+                    </div>
+
+                    {pairingSession ? (
+                        <div>
+                            {/* Code-Anzeige */}
+                            <div className="bg-gray-50 rounded-xl p-6 text-center mb-6">
+                                <p className="text-sm text-gray-500 mb-2">Dein Pairing-Code</p>
+                                <p className="text-5xl font-mono font-bold tracking-widest text-gray-900">
+                                    {pairingSession.code}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-2">Gib diesen Code am Gerät ein – gültig für 2 Minuten</p>
+                            </div>
+
+                            {/* Geräteliste */}
+                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3">
+                                Verfügbare Geräte
+                            </p>
+
+                            {availableDevices.length === 0 ? (
+                                <div className="border border-dashed border-gray-300 rounded-xl p-8 text-center text-sm text-gray-400">
+                                    Keine Geräte gefunden – warte bis sich ein Gerät ankündigt
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    {availableDevices.map(device => (
+                                        <div
+                                            key={device.deviceId}
+                                            className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-4"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></div>
+                                                <div>
+                                                    <p className="font-mono text-sm text-gray-900">{device.deviceId}</p>
+                                                    <p className="text-xs text-gray-400">Zuletzt gesehen: {formatLastAnnounce(device.lastAnnounce)}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            <button
+                                onClick={() => setPairingSession(null)}
+                                className="mt-4 w-full py-2 text-sm text-gray-500 hover:text-gray-800"
+                            >
+                                Abbrechen
+                            </button>
+                        </div>
+                    ) : (
                         <button
                             onClick={pairing}
                             disabled={loading}
@@ -486,12 +560,6 @@ const EmergencyContactApp = () => {
                         >
                             {loading ? 'Pairing wird begonnen...' : 'Pairing starten'}
                         </button>
-                    </div>
-
-                    {message && (
-                        <div className={`mt-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-                            {message.text}
-                        </div>
                     )}
                 </div>
 

@@ -11,8 +11,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -132,8 +134,8 @@ public class EmergencyController {
     public ResponseEntity<?> announceDevice(@RequestBody DeviceAnnouncementRequest deviceRequest) {
         try {
             Optional<Device> existing = supabaseService.getDeviceById(deviceRequest.deviceId());
-            String lastAnnounce = LocalDateTime.now().atOffset(ZoneOffset.UTC)
-                    .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            String lastAnnounce = OffsetDateTime.now(ZoneOffset.UTC)
+                    .format(DateTimeFormatter.ISO_INSTANT);
             Device saved;
             if (existing.isPresent()) {
                 saved = supabaseService.updateDevice(deviceRequest.deviceId(), lastAnnounce);
@@ -149,6 +151,18 @@ public class EmergencyController {
         }
     }
 
+    /// Aktive Geräte holen
+    @GetMapping("/device/pairing")
+    public ResponseEntity<?> getPairingDevices(Authentication authentication){
+        try {
+            List<Device> devices = supabaseService.getRecentlyAnnouncedDevices();
+            return ResponseEntity.ok(devices);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @PostMapping("/user/pairing/start")
     public ResponseEntity<?> startPairing(Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
@@ -157,9 +171,8 @@ public class EmergencyController {
         try {
             SecureRandom random = new SecureRandom();
             int code = 1000 + random.nextInt(9000);
-            LocalDateTime now = LocalDateTime.now();
 
-            String expiresAt = now.plusMinutes(5).atOffset(ZoneOffset.UTC).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+            String expiresAt = OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(2).format(DateTimeFormatter.ISO_INSTANT);
             PairingSession session = new PairingSession(userId, code, expiresAt);
 
             PairingSession saved = supabaseService.savePairingSession(userToken, session);

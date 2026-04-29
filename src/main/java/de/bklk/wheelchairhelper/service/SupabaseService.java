@@ -10,8 +10,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -218,8 +221,29 @@ public class SupabaseService {
         }
     }
 
+    public List<Device> getRecentlyAnnouncedDevices() throws IOException {
+        String twoMinutesAgo = OffsetDateTime.now(ZoneOffset.UTC)
+                .minusMinutes(2)
+                .format(DateTimeFormatter.ISO_INSTANT);
+
+        Request request = new Request.Builder()
+                .url(supabaseUrl + "/rest/v1/devices?last_announce=gte." + twoMinutesAgo + "&status=eq.UNPAIRED")
+                .get()
+                .addHeader("apikey", supabaseKey)
+                .addHeader("Authorization", "Bearer " + supabaseKey)
+                .addHeader("Accept", "application/json")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            assert response.body() != null;
+            String body = response.body().string();
+            Device[] devices = gson.fromJson(body, Device[].class);
+            return Arrays.asList(devices);
+        }
+    }
+
     public Device updateDevice(String deviceId, String lastAnnounce) throws IOException {
-        String json = gson.toJson(new DeviceUpdate(lastAnnounce));
+        String json = gson.toJson(new DeviceUpdateLastAnnounce(lastAnnounce));
         RequestBody body = RequestBody.create(json, MediaType.parse("application/json"));
 
         Request request = new Request.Builder()
@@ -280,7 +304,11 @@ public class SupabaseService {
             @SerializedName("last_announce") String lastAnnounce
             ) {}
 
-    private record DeviceUpdate(
+    private record DeviceUpdateLastAnnounce(
             @SerializedName("last_announce") String lastAnnounce
+    ) {}
+
+    private record DeviceUpdateStatus(
+            Status status
     ) {}
 }

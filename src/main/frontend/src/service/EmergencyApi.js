@@ -72,6 +72,12 @@ export const emergencyApi = {
         });
     },
 
+    async getAvailableDevices(token) {
+        return await fetchWithAuth(`${API_BASE_URL}/device/pairing`, token, {
+            method: 'GET'
+        })
+    },
+
     // Health Check
     async healthCheck() {
         const response = await fetch(`${API_BASE_URL}/health`);
