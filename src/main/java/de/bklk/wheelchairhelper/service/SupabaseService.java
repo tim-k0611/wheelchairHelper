@@ -15,6 +15,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Slf4j
@@ -263,8 +264,34 @@ public class SupabaseService {
         }
     }
 
-    public PairingSession savePairingSession(String userToken, PairingSession session) throws IOException {
-        String json = gson.toJson(session);
+    public Optional<PairingSession> getPairingSessionForDevice (String deviceId) throws IOException {
+
+        String now = OffsetDateTime.now(ZoneOffset.UTC)
+                .format(DateTimeFormatter.ISO_INSTANT);
+
+        Request request = new Request.Builder()
+                .url(supabaseUrl + "/rest/v1/pairing_sessions?device_id=eq." + deviceId + "&expires_at=gte." + now + "&order=expires_at.desc&limit=1")
+                .get()
+                .addHeader("apikey", supabaseKey)
+                .addHeader("Authorization", "Bearer " + supabaseKey)
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                String errorBody = response.body() != null ? response.body().string() : "kein body";
+                throw new IOException("Fehler beim Speichern: " + response.code() + " – " + errorBody);
+            }
+            if (response.body() != null) {
+                String responseBody = response.body().string();
+                PairingSession[] sessions = gson.fromJson(responseBody, PairingSession[].class);
+                return sessions.length > 0 ? Optional.of(sessions[0]) : Optional.empty();
+            }
+            return Optional.empty();
+        }
+    }
+
+    public PairingSession savePairingSession(String userToken, Map<String, Object> data) throws IOException {
+        String json = gson.toJson(data);
 
         RequestBody body = RequestBody.create(
                 json,
@@ -308,7 +335,4 @@ public class SupabaseService {
             @SerializedName("last_announce") String lastAnnounce
     ) {}
 
-    private record DeviceUpdateStatus(
-            Status status
-    ) {}
 }

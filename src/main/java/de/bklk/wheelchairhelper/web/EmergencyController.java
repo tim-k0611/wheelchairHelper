@@ -4,16 +4,17 @@ import de.bklk.wheelchairhelper.model.*;
 import de.bklk.wheelchairhelper.service.EmailService;
 import de.bklk.wheelchairhelper.service.SupabaseService;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.SecureRandom;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -163,6 +164,40 @@ public class EmergencyController {
         }
     }
 
+    /// Falls ein User ein Gerät anklickt zum Koppeln
+    @PostMapping("/user/pairing/device")
+    public ResponseEntity<?> pairWithDevice(@RequestBody PairingUpdateRequest request, Authentication authentication) {
+        String userToken = (String) authentication.getCredentials();
+
+        try {
+            Map<String, Object> data = new HashMap<>();
+            data.put("device_id", request.deviceId());
+            PairingSession saved = supabaseService.savePairingSession(userToken, data);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Fehler beim Speichern: " +  e.getMessage()));
+        }
+    }
+
+    /// Gibt es einen Code für das Gerät?
+    @GetMapping("/device/pairing/code")
+    public ResponseEntity<?> getDevicePairingCode(@RequestParam String deviceId) {
+        try {
+            Optional<Device> existing = supabaseService.getDeviceById(deviceId);
+            if (existing.isEmpty()) return ResponseEntity.status(404).body(Map.of("error", "Gerät nicht bekannt"));
+
+            Optional<PairingSession> session = supabaseService.getPairingSessionForDevice(deviceId);
+
+            if (session.isEmpty()) return ResponseEntity.status(404).body(Map.of("error", "Keine offene Pairing-Session"));
+
+            return ResponseEntity.ok(session.get());
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Fehler beim Abrufen des Pairing-Codes: " +  e.getMessage()));
+        }
+    }
+
     @PostMapping("/user/pairing/start")
     public ResponseEntity<?> startPairing(Authentication authentication) {
         String userId = (String) authentication.getPrincipal();
@@ -173,9 +208,14 @@ public class EmergencyController {
             int code = 1000 + random.nextInt(9000);
 
             String expiresAt = OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(2).format(DateTimeFormatter.ISO_INSTANT);
-            PairingSession session = new PairingSession(userId, code, expiresAt);
 
-            PairingSession saved = supabaseService.savePairingSession(userToken, session);
+            Map<String, Object> data = new HashMap<>();
+            data.put("user_id", userId);
+            data.put("device_id", null);
+            data.put("code", code);
+            data.put("expires_at", expiresAt);
+
+            PairingSession saved = supabaseService.savePairingSession(userToken, data);
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
             return ResponseEntity.badRequest()

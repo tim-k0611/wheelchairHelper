@@ -78,6 +78,13 @@ export const emergencyApi = {
         })
     },
 
+    async pairWithDevice(deviceId, token) {
+        return await fetchWithAuth(`${API_BASE_URL}/user/pairing/device`, token, {
+            method: 'POST',
+            body: deviceId
+        });
+    },
+
     // Health Check
     async healthCheck() {
         const response = await fetch(`${API_BASE_URL}/health`);

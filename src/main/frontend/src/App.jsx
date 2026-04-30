@@ -177,7 +177,7 @@ const EmergencyContactApp = () => {
 
     // Pairing auslösen
     const pairing = async () => {
-        setLoading(true);
+        setPairingLoading(true);
         try {
             const pairingSession = await emergencyApi.startPairing(session.access_token);
             const devices = await emergencyApi.getAvailableDevices(session.access_token);
@@ -187,10 +187,22 @@ const EmergencyContactApp = () => {
             console.error('Pairing error: ', error);
             setMessage({ type: 'error', text: 'Fehler beim Pairing: ' + error.message });
         }
-        setLoading(false);
+        setPairingLoading(false);
     };
 
-    // Login/Registrierung
+    const handleDeviceClick = async (device) => {
+        setPairingLoading(true);
+        try {
+            const pairingSession = await emergencyApi.pairWithDevice(device.deviceId, token);
+            setPairingSession(pairingSession);
+        } catch (error) {
+            console.error('Device pairing error', error);
+            setMessage({type: 'error', text: 'Fehler beim Pairing mit Device: ' + error.message});
+        }
+        setPairingLoading(false);
+    }
+
+        // Login/Registrierung
     const handleAuth = async () => {
         if (!credentials.email || !credentials.password) {
             setMessage({ type: 'error', text: 'Bitte E-Mail und Passwort eingeben' });
@@ -531,6 +543,7 @@ const EmergencyContactApp = () => {
                                     {availableDevices.map(device => (
                                         <div
                                             key={device.deviceId}
+                                            onClick={() => handleDeviceClick(device)}
                                             className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-4"
                                         >
                                             <div className="flex items-center gap-3">
@@ -555,10 +568,10 @@ const EmergencyContactApp = () => {
                     ) : (
                         <button
                             onClick={pairing}
-                            disabled={loading}
+                            disabled={pairingLoading}
                             className="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
                         >
-                            {loading ? 'Pairing wird begonnen...' : 'Pairing starten'}
+                            {pairingLoading ? 'Pairing wird begonnen...' : 'Pairing starten'}
                         </button>
                     )}
                 </div>
