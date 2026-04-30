@@ -193,7 +193,7 @@ const EmergencyContactApp = () => {
     const handleDeviceClick = async (device) => {
         setPairingLoading(true);
         try {
-            const pairingSession = await emergencyApi.pairWithDevice(device.deviceId, token);
+            const pairingSession = await emergencyApi.pairWithDevice(device.deviceId, session.access_token);
             setPairingSession(pairingSession);
         } catch (error) {
             console.error('Device pairing error', error);
@@ -544,7 +544,7 @@ const EmergencyContactApp = () => {
                                         <div
                                             key={device.deviceId}
                                             onClick={() => handleDeviceClick(device)}
-                                            className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-4"
+                                            className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:bg-gray-50 active:scale-[0.98] transition transform"
                                         >
                                             <div className="flex items-center gap-3">
                                                 <div className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0"></div>
