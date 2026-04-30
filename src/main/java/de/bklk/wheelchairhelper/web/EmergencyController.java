@@ -171,9 +171,11 @@ public class EmergencyController {
         String userId = (String) authentication.getPrincipal();
 
         try {
+            String expiresAt = OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(2).format(DateTimeFormatter.ISO_INSTANT);
             Map<String, Object> data = new HashMap<>();
             data.put("device_id", request.deviceId());
             data.put("user_id", userId);
+            data.put("expires_at", expiresAt);
             PairingSession saved = supabaseService.savePairingSession(userToken, data);
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
