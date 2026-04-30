@@ -171,11 +171,15 @@ public class EmergencyController {
         String userId = (String) authentication.getPrincipal();
 
         try {
-            String expiresAt = OffsetDateTime.now(ZoneOffset.UTC).plusMinutes(2).format(DateTimeFormatter.ISO_INSTANT);
+            Optional<PairingSession> existing = supabaseService.getPairingSessionForUser(userId);
+            if (existing.isEmpty()) return ResponseEntity.status(404).body(Map.of("error", "Fehler beim Senden des Codes: Pairing Session ist abgelaufen"));
+
+            PairingSession session = existing.get();
+
             Map<String, Object> data = new HashMap<>();
             data.put("device_id", request.deviceId());
             data.put("user_id", userId);
-            data.put("expires_at", expiresAt);
+            data.put("expires_at", session.expiresAt());
             PairingSession saved = supabaseService.savePairingSession(userToken, data);
             return ResponseEntity.ok(saved);
         } catch (Exception e) {

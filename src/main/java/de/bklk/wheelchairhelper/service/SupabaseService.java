@@ -279,7 +279,33 @@ public class SupabaseService {
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 String errorBody = response.body() != null ? response.body().string() : "kein body";
-                throw new IOException("Fehler beim Speichern: " + response.code() + " – " + errorBody);
+                throw new IOException("Fehler beim Laden: " + response.code() + " – " + errorBody);
+            }
+            if (response.body() != null) {
+                String responseBody = response.body().string();
+                PairingSession[] sessions = gson.fromJson(responseBody, PairingSession[].class);
+                return sessions.length > 0 ? Optional.of(sessions[0]) : Optional.empty();
+            }
+            return Optional.empty();
+        }
+    }
+
+    public Optional<PairingSession> getPairingSessionForUser (String userId) throws IOException {
+
+        String now = OffsetDateTime.now(ZoneOffset.UTC)
+                .format(DateTimeFormatter.ISO_INSTANT);
+
+        Request request = new Request.Builder()
+                .url(supabaseUrl + "/rest/v1/pairing_sessions?user_id=eq." + userId + "&expires_at=gte." + now + "&order=expires_at.desc&limit=1")
+                .get()
+                .addHeader("apikey", supabaseKey)
+                .addHeader("Authorization", "Bearer " + supabaseKey)
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                String errorBody = response.body() != null ? response.body().string() : "kein body";
+                throw new IOException("Fehler beim Laden: " + response.code() + " – " + errorBody);
             }
             if (response.body() != null) {
                 String responseBody = response.body().string();
