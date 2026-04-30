@@ -290,7 +290,7 @@ public class SupabaseService {
         }
     }
 
-    public Optional<PairingSession> getPairingSessionForUser (String userId) throws IOException {
+    public Optional<PairingSession> getPairingSessionForUser (String userId, String userToken) throws IOException {
 
         String now = OffsetDateTime.now(ZoneOffset.UTC)
                 .format(DateTimeFormatter.ISO_INSTANT);
@@ -299,7 +299,7 @@ public class SupabaseService {
                 .url(supabaseUrl + "/rest/v1/pairing_sessions?user_id=eq." + userId + "&expires_at=gte." + now + "&order=expires_at.desc&limit=1")
                 .get()
                 .addHeader("apikey", supabaseKey)
-                .addHeader("Authorization", "Bearer " + supabaseKey)
+                .addHeader("Authorization", "Bearer " + userToken)
                 .build();
 
         try (Response response = client.newCall(request).execute()) {

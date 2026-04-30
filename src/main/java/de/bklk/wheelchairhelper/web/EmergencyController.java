@@ -171,7 +171,7 @@ public class EmergencyController {
         String userId = (String) authentication.getPrincipal();
 
         try {
-            Optional<PairingSession> existing = supabaseService.getPairingSessionForUser(userId);
+            Optional<PairingSession> existing = supabaseService.getPairingSessionForUser(userId, userToken);
             if (existing.isEmpty()) return ResponseEntity.status(404).body(Map.of("error", "Fehler beim Senden des Codes: Pairing Session ist abgelaufen"));
 
             PairingSession session = existing.get();
