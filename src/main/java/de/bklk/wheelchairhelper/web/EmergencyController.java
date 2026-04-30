@@ -168,10 +168,12 @@ public class EmergencyController {
     @PostMapping("/user/pairing/device")
     public ResponseEntity<?> pairWithDevice(@RequestBody PairingUpdateRequest request, Authentication authentication) {
         String userToken = (String) authentication.getCredentials();
+        String userId = (String) authentication.getPrincipal();
 
         try {
             Map<String, Object> data = new HashMap<>();
             data.put("device_id", request.deviceId());
+            data.put("user_id", userId);
             PairingSession saved = supabaseService.savePairingSession(userToken, data);
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
