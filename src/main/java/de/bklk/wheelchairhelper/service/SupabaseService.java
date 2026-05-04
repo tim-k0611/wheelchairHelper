@@ -296,7 +296,7 @@ public class SupabaseService {
                 .format(DateTimeFormatter.ISO_INSTANT);
 
         Request request = new Request.Builder()
-                .url(supabaseUrl + "/rest/v1/pairing_sessions?user_id=eq." + userId + "&expires_at=gte." + now + "&order=expires_at.desc&limit=1")
+                .url(supabaseUrl + "/rest/v1/pairing_sessions?user_id=eq." + userId + "&order=expires_at.desc&limit=1")
                 .get()
                 .addHeader("apikey", supabaseKey)
                 .addHeader("Authorization", "Bearer " + userToken)
@@ -325,12 +325,43 @@ public class SupabaseService {
         );
 
         Request request = new Request.Builder()
-                .url(supabaseUrl + "/rest/v1/pairing_sessions?on_conflict=user_id")
+                .url(supabaseUrl + "/rest/v1/pairing_sessions")
                 .post(body)
                 .addHeader("apikey", supabaseKey)
                 .addHeader("Authorization", "Bearer " + userToken)
                 .addHeader("Content-Type", "application/json")
-                .addHeader("Prefer", "resolution=merge-duplicates,return=representation")
+                .addHeader("Prefer", "return=representation")
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                String errorBody = response.body() != null ? response.body().string() : "kein body";
+                throw new IOException("Fehler beim Speichern: " + response.code() + " – " + errorBody);
+            }
+            if (response.body() != null) {
+                String responseBody = response.body().string();
+                PairingSession[] sessions = gson.fromJson(responseBody, PairingSession[].class);
+                return sessions.length > 0 ? sessions[0] : null;
+            }
+            return null;
+        }
+    }
+
+    public PairingSession udpatePairingSession(String userToken, Map<String, Object> data) throws IOException {
+        String json = gson.toJson(data);
+
+        RequestBody body = RequestBody.create(
+                json,
+                MediaType.parse("application/json")
+        );
+
+        Request request = new Request.Builder()
+                .url(supabaseUrl + "/rest/v1/pairing_sessions?user_id=eq." + data.get("user_id"))
+                .patch(body)
+                .addHeader("apikey", supabaseKey)
+                .addHeader("Authorization", "Bearer " + userToken)
+                .addHeader("Content-Type", "application/json")
+                .addHeader("Prefer", "return=representation")
                 .build();
 
         try (Response response = client.newCall(request).execute()) {

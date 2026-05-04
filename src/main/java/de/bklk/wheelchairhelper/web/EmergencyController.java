@@ -10,7 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import javax.swing.text.html.Option;
 import java.security.SecureRandom;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -172,7 +175,7 @@ public class EmergencyController {
 
         try {
             Optional<PairingSession> existing = supabaseService.getPairingSessionForUser(userId, userToken);
-            if (existing.isEmpty()) return ResponseEntity.status(404).body(Map.of("error", "Fehler beim Senden des Codes: Pairing Session ist abgelaufen"));
+            if (existing.isEmpty() || OffsetDateTime.parse(existing.get().expiresAt(), DateTimeFormatter.ISO_INSTANT).isBefore(OffsetDateTime.now(ZoneOffset.UTC))) return ResponseEntity.status(404).body(Map.of("error", "Fehler beim Senden des Codes: Pairing Session ist abgelaufen"));
 
             PairingSession session = existing.get();
 
@@ -180,7 +183,7 @@ public class EmergencyController {
             data.put("device_id", request.deviceId());
             data.put("user_id", userId);
             data.put("expires_at", session.expiresAt());
-            PairingSession saved = supabaseService.savePairingSession(userToken, data);
+            PairingSession saved = supabaseService.udpatePairingSession(userToken, data);
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
             return ResponseEntity.status(500)
@@ -223,7 +226,15 @@ public class EmergencyController {
             data.put("code", code);
             data.put("expires_at", expiresAt);
 
-            PairingSession saved = supabaseService.savePairingSession(userToken, data);
+            Optional<PairingSession> existing = supabaseService.getPairingSessionForUser(userId, userToken);
+
+            PairingSession saved;
+            if (existing.isPresent()){
+                saved = supabaseService.udpatePairingSession(userToken, data);
+            }else {
+                saved = supabaseService.savePairingSession(userToken, data);
+            }
+            if (saved == null) return ResponseEntity.status(500).body(Map.of("error", "Fehler beim Speichern der Pairing-Session"));
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
