@@ -348,6 +348,7 @@ public class SupabaseService {
 
     public PairingSession updatePairingSession(String userToken, Map<String, Object> data) throws IOException {
         String json = gson.toJson(data);
+        log.info("JSON: {}", json);
 
         RequestBody body = RequestBody.create(
                 json,

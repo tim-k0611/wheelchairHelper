@@ -1,7 +1,7 @@
 package de.bklk.wheelchairhelper.web;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+import com.google.gson.JsonNull;
 import de.bklk.wheelchairhelper.model.*;
 import de.bklk.wheelchairhelper.service.EmailService;
 import de.bklk.wheelchairhelper.service.SupabaseService;
@@ -222,7 +222,7 @@ public class EmergencyController {
 
             Map<String, Object> data = new HashMap<>();
             data.put("user_id", userId);
-            data.put("device_id", gson.toJsonTree(null));
+            data.put("device_id", JsonNull.INSTANCE);
             data.put("code", code);
             data.put("expires_at", expiresAt);
 
