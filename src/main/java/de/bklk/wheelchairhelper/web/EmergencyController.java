@@ -1,19 +1,17 @@
 package de.bklk.wheelchairhelper.web;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import de.bklk.wheelchairhelper.model.*;
 import de.bklk.wheelchairhelper.service.EmailService;
 import de.bklk.wheelchairhelper.service.SupabaseService;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import javax.swing.text.html.Option;
 import java.security.SecureRandom;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -32,6 +30,8 @@ public class EmergencyController {
 
     @Autowired
     private EmailService emailService;
+
+    private final Gson gson = new Gson();
 
     @PostMapping("/contact")
     public ResponseEntity<?> saveContact(@RequestBody EmergencyContact contact, Authentication authentication){
@@ -175,7 +175,7 @@ public class EmergencyController {
 
         try {
             Optional<PairingSession> existing = supabaseService.getPairingSessionForUser(userId, userToken);
-            if (existing.isEmpty() || OffsetDateTime.parse(existing.get().expiresAt(), DateTimeFormatter.ISO_INSTANT).isBefore(OffsetDateTime.now(ZoneOffset.UTC))) return ResponseEntity.status(404).body(Map.of("error", "Fehler beim Senden des Codes: Pairing Session ist abgelaufen"));
+            if (existing.isEmpty() || OffsetDateTime.parse(existing.get().expiresAt()).isBefore(OffsetDateTime.now(ZoneOffset.UTC))) return ResponseEntity.status(404).body(Map.of("error", "Fehler beim Senden des Codes: Pairing Session ist abgelaufen"));
 
             PairingSession session = existing.get();
 
@@ -183,7 +183,7 @@ public class EmergencyController {
             data.put("device_id", request.deviceId());
             data.put("user_id", userId);
             data.put("expires_at", session.expiresAt());
-            PairingSession saved = supabaseService.udpatePairingSession(userToken, data);
+            PairingSession saved = supabaseService.updatePairingSession(userToken, data);
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
             return ResponseEntity.status(500)
@@ -222,7 +222,7 @@ public class EmergencyController {
 
             Map<String, Object> data = new HashMap<>();
             data.put("user_id", userId);
-            data.put("device_id", null);
+            data.put("device_id", gson.toJsonTree(null));
             data.put("code", code);
             data.put("expires_at", expiresAt);
 
@@ -230,7 +230,7 @@ public class EmergencyController {
 
             PairingSession saved;
             if (existing.isPresent()){
-                saved = supabaseService.udpatePairingSession(userToken, data);
+                saved = supabaseService.updatePairingSession(userToken, data);
             }else {
                 saved = supabaseService.savePairingSession(userToken, data);
             }

@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -347,7 +346,7 @@ public class SupabaseService {
         }
     }
 
-    public PairingSession udpatePairingSession(String userToken, Map<String, Object> data) throws IOException {
+    public PairingSession updatePairingSession(String userToken, Map<String, Object> data) throws IOException {
         String json = gson.toJson(data);
 
         RequestBody body = RequestBody.create(
