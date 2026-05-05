@@ -222,7 +222,7 @@ public class EmergencyController {
 
             Map<String, Object> data = new HashMap<>();
             data.put("user_id", userId);
-            data.put("device_id", JsonNull.INSTANCE);
+            data.put("device_id", null);
             data.put("code", code);
             data.put("expires_at", expiresAt);
 

@@ -1,6 +1,7 @@
 package de.bklk.wheelchairhelper.service;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import de.bklk.wheelchairhelper.model.*;
 import lombok.extern.slf4j.Slf4j;
@@ -27,8 +28,13 @@ public class SupabaseService {
     @Value("${supabase.key}")
     private String supabaseKey;
 
+    @Value("${supabase.service-role-key}")
+    private String serviceRoleKey;
+
     private final OkHttpClient client = new OkHttpClient();
-    private final Gson gson = new Gson();
+    private final Gson gson = new GsonBuilder()
+            .serializeNulls()
+            .create();
 
     // Notfallkontakt speichern/aktualisieren
     public EmergencyContact saveEmergencyContact(String userId, String userToken, EmergencyContact contact) throws IOException {
@@ -271,8 +277,8 @@ public class SupabaseService {
         Request request = new Request.Builder()
                 .url(supabaseUrl + "/rest/v1/pairing_sessions?device_id=eq." + deviceId + "&expires_at=gte." + now + "&order=expires_at.desc&limit=1")
                 .get()
-                .addHeader("apikey", supabaseKey)
-                .addHeader("Authorization", "Bearer " + supabaseKey)
+                .addHeader("apikey", serviceRoleKey)
+                .addHeader("Accept", "application/json")
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
