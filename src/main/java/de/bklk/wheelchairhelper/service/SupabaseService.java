@@ -248,12 +248,12 @@ public class SupabaseService {
         }
     }
 
-    public Device updateDevice(String deviceId, String lastAnnounce) throws IOException {
-        String json = gson.toJson(new DeviceUpdateLastAnnounce(lastAnnounce));
+    public Device updateDevice(Map<String,Object> data) throws IOException {
+        String json = gson.toJson(data);
         RequestBody body = RequestBody.create(json, MediaType.parse("application/json"));
 
         Request request = new Request.Builder()
-                .url(supabaseUrl + "/rest/v1/devices?device_id=eq." + deviceId)
+                .url(supabaseUrl + "/rest/v1/devices?device_id=eq." + data.get("device_id"))
                 .patch(body)
                 .addHeader("apikey", supabaseKey)
                 .addHeader("Authorization", "Bearer " + supabaseKey)
@@ -354,7 +354,6 @@ public class SupabaseService {
 
     public PairingSession updatePairingSession(String userToken, Map<String, Object> data) throws IOException {
         String json = gson.toJson(data);
-        log.info("JSON: {}", json);
 
         RequestBody body = RequestBody.create(
                 json,
@@ -381,6 +380,30 @@ public class SupabaseService {
                 return sessions.length > 0 ? sessions[0] : null;
             }
             return null;
+        }
+    }
+
+    public Optional<Device> getDeviceForUser(String userId, String userToken) throws IOException{
+        String url = supabaseUrl + "/rest/v1/devices?user_id=eq." + userId + "&status=eq.PAIRED";
+        log.info("URL: {}", url);
+        Request request = new Request.Builder()
+                .url(url)
+                .get()
+                .addHeader("apikey", supabaseKey)
+                .addHeader("Authorization", "Bearer " + userToken)
+                .build();
+
+        try (Response response = client.newCall(request).execute()) {
+            if (!response.isSuccessful()) {
+                String errorBody = response.body() != null ? response.body().string() : "kein body";
+                throw new IOException("Fehler beim Laden: " + response.code() + " – " + errorBody);
+            }
+            if (response.body() != null) {
+                String responseBody = response.body().string();
+                Device[] devices = gson.fromJson(responseBody, Device[].class);
+                return devices.length > 0 ? Optional.of(devices[0]) : Optional.empty();
+            }
+            return Optional.empty();
         }
     }
 

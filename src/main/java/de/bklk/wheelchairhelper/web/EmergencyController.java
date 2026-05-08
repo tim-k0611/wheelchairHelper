@@ -1,7 +1,6 @@
 package de.bklk.wheelchairhelper.web;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonNull;
 import de.bklk.wheelchairhelper.model.*;
 import de.bklk.wheelchairhelper.service.EmailService;
 import de.bklk.wheelchairhelper.service.SupabaseService;
@@ -15,10 +14,7 @@ import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @RestController
@@ -142,7 +138,10 @@ public class EmergencyController {
                     .format(DateTimeFormatter.ISO_INSTANT);
             Device saved;
             if (existing.isPresent()) {
-                saved = supabaseService.updateDevice(deviceRequest.deviceId(), lastAnnounce);
+                Map<String, Object> data = new HashMap<>();
+                data.put("device_id", deviceRequest.deviceId());
+                data.put("last_announce", lastAnnounce);
+                saved = supabaseService.updateDevice(data);
             } else {
                 Device device = new Device(deviceRequest.deviceId(), Status.UNPAIRED, null, lastAnnounce);
                 saved = supabaseService.saveDevice(device);
@@ -169,7 +168,7 @@ public class EmergencyController {
 
     /// Falls ein User ein Gerät anklickt zum Koppeln
     @PostMapping("/user/pairing/device")
-    public ResponseEntity<?> pairWithDevice(@RequestBody PairingUpdateRequest request, Authentication authentication) {
+    public ResponseEntity<?> pairWithDevice(@RequestBody DeviceIdRequest request, Authentication authentication) {
         String userToken = (String) authentication.getCredentials();
         String userId = (String) authentication.getPrincipal();
 
@@ -238,6 +237,64 @@ public class EmergencyController {
             return ResponseEntity.ok(saved);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Fehler beim Speichern: " +  e.getMessage()));
+        }
+    }
+
+    @PostMapping("/user/pairing/complete")
+    public ResponseEntity<?> completePairing(@RequestBody DeviceIdRequest request, Authentication authentication){
+        String userId = (String) authentication.getPrincipal();
+        String userToken = (String) authentication.getCredentials();
+
+        try {
+            Optional<Device> existing = supabaseService.getDeviceById(request.deviceId());
+            if (existing.isEmpty()) return ResponseEntity.status(404).body(Map.of("error", "Gerät nicht gefunden"));
+            Device device = existing.get();
+            Map<String, Object> data = new HashMap<>();
+            data.put("device_id", device.deviceId());
+            data.put("status", Status.PAIRED);
+            data.put("user_id", userId);
+            Device saved = supabaseService.updateDevice(data);
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Fehler beim Speichern: " +  e.getMessage()));
+        }
+    }
+
+    @GetMapping("/user/pairing/device")
+    public ResponseEntity<?> getDeviceToUser(Authentication authentication){
+        String userId = (String) authentication.getPrincipal();
+        String userToken = (String) authentication.getCredentials();
+
+        try{
+            Optional<Device> existing = supabaseService.getDeviceForUser(userId, userToken);
+            if (existing.isEmpty()) return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(existing.get());
+        }catch (Exception e) {
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Fehler beim Speichern: " +  e.getMessage()));
+        }
+    }
+
+    @PostMapping("/user/pairing/disconnect")
+    public ResponseEntity<?> disconnectDeviceFromUser(@RequestBody DeviceIdRequest request, Authentication authentication) {
+        String userId = (String) authentication.getPrincipal();
+        String userToken = (String) authentication.getCredentials();
+
+        try {
+            Optional<Device> existing = supabaseService.getDeviceForUser(userId, userToken);
+            if (existing.isEmpty() || !Objects.equals(request.deviceId(), existing.get().deviceId())) return ResponseEntity.notFound().build();
+            Device device = existing.get();
+            Map<String, Object> data = new HashMap<>();
+            data.put("device_id", device.deviceId());
+            data.put("status", Status.UNPAIRED);
+            data.put("user_id", null);
+            Device saved = supabaseService.updateDevice(data);
+
+            return ResponseEntity.ok(saved);
+        } catch (Exception e) {
+            return ResponseEntity.status(500)
                     .body(Map.of("error", "Fehler beim Speichern: " +  e.getMessage()));
         }
     }

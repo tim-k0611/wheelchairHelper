@@ -85,6 +85,26 @@ export const emergencyApi = {
         });
     },
 
+    async confirmPairing(deviceId, token) {
+        return await fetchWithAuth(`${API_BASE_URL}/user/pairing/complete`, token, {
+            method: 'POST',
+            body: JSON.stringify({deviceId})
+        });
+    },
+
+    async getDeviceForUser(token) {
+        return await fetchWithAuth(`${API_BASE_URL}/user/pairing/device`, token, {
+            method: 'GET'
+        });
+    },
+
+    async disconnectDeviceFromUser(deviceId, token) {
+        return await fetchWithAuth(`${API_BASE_URL}/user/pairing/disconnect`, token, {
+            method: 'POST',
+            body: JSON.stringify({deviceId})
+        });
+    },
+
     // Health Check
     async healthCheck() {
         const response = await fetch(`${API_BASE_URL}/health`);
