@@ -13,10 +13,7 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -38,9 +35,15 @@ public class SupabaseService {
 
     // Notfallkontakt speichern/aktualisieren
     public EmergencyContact saveEmergencyContact(String userId, String userToken, EmergencyContact contact) throws IOException {
-        contact.setUserId(userId);
 
-        String json = gson.toJson(contact);
+        Map<String, Object> data = new HashMap<>();
+        data.put("user_id", userId);
+        data.put("contact_first_name", contact.getContactFirstName());
+        data.put("contact_name", contact.getContactName());
+        data.put("contact_email", contact.getContactEmail());
+        data.put("contact_phone", contact.getContactPhone());
+        data.put("updated_at", OffsetDateTime.now(ZoneOffset.UTC).format(DateTimeFormatter.ISO_INSTANT));
+        String json = gson.toJson(data);
 
         RequestBody body = RequestBody.create(
                 json,
@@ -60,6 +63,7 @@ public class SupabaseService {
             if (!response.isSuccessful()) {
                 throw new IOException("Fehler beim Speichern: " + response.code());
             }
+            assert response.body() != null;
             String responseBody = response.body().string();
             EmergencyContact[] contacts = gson.fromJson(responseBody, EmergencyContact[].class);
             return contacts.length > 0 ? contacts[0] : null;
@@ -68,9 +72,13 @@ public class SupabaseService {
 
     // Userinformationen speichern/aktualisieren
     public UserInformation saveUserInformation(String userId, String userToken, UserInformation userInformation) throws IOException {
-        userInformation.setUserId(userId);
 
-        String json = gson.toJson(userInformation);
+        Map<String, Object> data = new HashMap<>();
+        data.put("user_id", userId);
+        data.put("first_name", userInformation.getFirstName());
+        data.put("last_name", userInformation.getLastName());
+
+        String json = gson.toJson(data);
 
         RequestBody body = RequestBody.create(
                 json,
@@ -78,7 +86,7 @@ public class SupabaseService {
         );
 
         Request request = new Request.Builder()
-                .url(supabaseUrl + "/rest/v1/user_information?on_conflict=user_id")
+                .url( supabaseUrl + "/rest/v1/user_information?on_conflict=user_id")
                 .post(body)
                 .addHeader("apikey", supabaseKey)
                 .addHeader("Authorization", "Bearer " + userToken)
@@ -88,6 +96,7 @@ public class SupabaseService {
 
         try (Response response = client.newCall(request).execute()) {
             if (!response.isSuccessful()) {
+                System.out.println(response.body());
                 throw new IOException("Fehler beim Speichern: " + response.code());
             }
             if (response.body() != null) {
@@ -202,7 +211,6 @@ public class SupabaseService {
                 gson.toJson(insert),
                 MediaType.parse("application/json")
         );
-        System.out.println(gson.toJson(insert));
 
         Request request = new Request.Builder()
                 .url(supabaseUrl + "/rest/v1/devices?on_conflict=device_id")
@@ -384,10 +392,8 @@ public class SupabaseService {
     }
 
     public Optional<Device> getDeviceForUser(String userId, String userToken) throws IOException{
-        String url = supabaseUrl + "/rest/v1/devices?user_id=eq." + userId + "&status=eq.PAIRED";
-        log.info("URL: {}", url);
         Request request = new Request.Builder()
-                .url(url)
+                .url(supabaseUrl + "/rest/v1/devices?user_id=eq." + userId + "&status=eq.PAIRED")
                 .get()
                 .addHeader("apikey", supabaseKey)
                 .addHeader("Authorization", "Bearer " + userToken)
