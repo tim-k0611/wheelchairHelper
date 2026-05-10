@@ -209,6 +209,7 @@ const EmergencyContactApp = () => {
     const handleConfirmPairing = async () => {
         try {
             await emergencyApi.confirmPairing(confirmDevice.deviceId, session.access_token);
+            setPairedDevice(confirmDevice);
             setConfirmDevice(null);
             setPairingSession(null);
             setMessage({type: 'success', text: '✅ Gerät erfolgreich gekoppelt!'});

@@ -98,7 +98,7 @@ export const emergencyApi = {
         });
     },
 
-    async disconnectDeviceFromUser(deviceId, token) {
+    async unpairDevice(deviceId, token) {
         return await fetchWithAuth(`${API_BASE_URL}/user/pairing/disconnect`, token, {
             method: 'POST',
             body: JSON.stringify({deviceId})
