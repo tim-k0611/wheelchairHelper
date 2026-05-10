@@ -6,6 +6,8 @@ import de.bklk.wheelchairhelper.service.EmailService;
 import de.bklk.wheelchairhelper.service.SupabaseService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +28,9 @@ public class EmergencyController {
 
     @Autowired
     private EmailService emailService;
+
+    @Value("${device.trigger.secret}")
+    private String triggerSecret;
 
     private final Gson gson = new Gson();
 
@@ -259,6 +264,26 @@ public class EmergencyController {
         } catch (Exception e) {
             return ResponseEntity.status(500)
                     .body(Map.of("error", "Fehler beim Speichern: " +  e.getMessage()));
+        }
+    }
+
+    @GetMapping("/device/pairing/paired")
+    public ResponseEntity<?> isCompletelyPaired(@RequestParam String deviceId){
+        try {
+            Optional<Device> existing = supabaseService.getDeviceById(deviceId);
+            if (existing.isEmpty()) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Gerät nicht gefunden"));
+            Device device = existing.get();
+            if (device.status() != Status.PAIRED) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Gerät ist nicht paired"));
+            return ResponseEntity.ok(Map.of(
+                    "device_id", device.deviceId(),
+                    "status", device.status(),
+                    "user_id", device.userId(),
+                    "last_announce", device.lastAnnounce(),
+                    "trigger_secret", triggerSecret
+            ));
+        } catch (Exception e){
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", "Fehler beim Abrufen: " +  e.getMessage()));
         }
     }
 
