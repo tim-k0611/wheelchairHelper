@@ -28,6 +28,9 @@ public class SupabaseService {
     @Value("${supabase.service-role-key}")
     private String serviceRoleKey;
 
+    @Value("${device.trigger.secret}")
+    private String triggerSecret;
+
     private final OkHttpClient client = new OkHttpClient();
     private final Gson gson = new GsonBuilder()
             .serializeNulls()
@@ -110,11 +113,13 @@ public class SupabaseService {
 
     //Userinformationen abrufen
     public UserInformation getUserInformation(String userId, String userToken) throws IOException {
+        String token = userToken.equals(triggerSecret) ? serviceRoleKey : userToken;
+
         Request request = new Request.Builder()
                 .url(supabaseUrl + "/rest/v1/user_information?user_id=eq." + userId)
                 .get()
                 .addHeader("apikey", supabaseKey)
-                .addHeader("Authorization", "Bearer " + userToken)
+                .addHeader("Authorization", "Bearer " + token)
                 .build();
 
         try (Response response = client.newCall(request).execute()) {
@@ -133,11 +138,13 @@ public class SupabaseService {
 
     // Notfallkontakt abrufen
     public EmergencyContact getEmergencyContact(String userId, String userToken) throws IOException {
+        String token = userToken.equals(triggerSecret) ? serviceRoleKey : userToken;
+
         Request request = new Request.Builder()
                 .url(supabaseUrl + "/rest/v1/emergency_contacts?user_id=eq." + userId)
                 .get()
                 .addHeader("apikey", supabaseKey)
-                .addHeader("Authorization", "Bearer " + userToken)
+                .addHeader("Authorization", "Bearer " + token)
                 .build();
 
         try (Response response = client.newCall(request).execute()) {

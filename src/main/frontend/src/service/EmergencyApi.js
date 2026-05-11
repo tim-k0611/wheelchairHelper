@@ -61,7 +61,7 @@ export const emergencyApi = {
 
     // Notfall auslösen
     async triggerEmergency(token) {
-        return await fetchWithAuth(`${API_BASE_URL}/trigger`, token, {
+        return await fetchWithAuth(`${API_BASE_URL}/user/trigger`, token, {
             method: 'POST'
         });
     },
