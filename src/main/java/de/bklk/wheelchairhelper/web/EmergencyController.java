@@ -102,7 +102,7 @@ public class EmergencyController {
     }
 
     /// Notfall-Endpoint - Sendet E-Mail an Notfallkontakt
-    @PostMapping("/trigger")
+    @PostMapping("/user/trigger")
     public ResponseEntity<?> triggerEmergency(Authentication authentication) {
         try{
             String userId = (String) authentication.getPrincipal();
