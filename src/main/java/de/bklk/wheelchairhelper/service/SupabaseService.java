@@ -113,12 +113,15 @@ public class SupabaseService {
 
     //Userinformationen abrufen
     public UserInformation getUserInformation(String userId, String userToken) throws IOException {
-        String token = userToken.equals(triggerSecret) ? serviceRoleKey : userToken;
+        boolean isTriggerRequest = userToken.equals(triggerSecret);
+
+        String key = isTriggerRequest ? serviceRoleKey : supabaseKey;
+        String token = isTriggerRequest ? serviceRoleKey : userToken;
 
         Request request = new Request.Builder()
                 .url(supabaseUrl + "/rest/v1/user_information?user_id=eq." + userId)
                 .get()
-                .addHeader("apikey", supabaseKey)
+                .addHeader("apikey", key)
                 .addHeader("Authorization", "Bearer " + token)
                 .build();
 
@@ -138,12 +141,15 @@ public class SupabaseService {
 
     // Notfallkontakt abrufen
     public EmergencyContact getEmergencyContact(String userId, String userToken) throws IOException {
-        String token = userToken.equals(triggerSecret) ? serviceRoleKey : userToken;
+        boolean isTriggerRequest = userToken.equals(triggerSecret);
+
+        String key = isTriggerRequest ? serviceRoleKey : supabaseKey;
+        String token = isTriggerRequest ? serviceRoleKey : userToken;
 
         Request request = new Request.Builder()
                 .url(supabaseUrl + "/rest/v1/emergency_contacts?user_id=eq." + userId)
                 .get()
-                .addHeader("apikey", supabaseKey)
+                .addHeader("apikey", key)
                 .addHeader("Authorization", "Bearer " + token)
                 .build();
 
