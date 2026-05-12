@@ -61,8 +61,47 @@ export const emergencyApi = {
 
     // Notfall auslösen
     async triggerEmergency(token) {
-        return await fetchWithAuth(`${API_BASE_URL}/trigger`, token, {
+        return await fetchWithAuth(`${API_BASE_URL}/user/trigger`, token, {
             method: 'POST'
+        });
+    },
+
+    async startPairing(token){
+        return await fetchWithAuth(`${API_BASE_URL}/user/pairing/start`, token, {
+            method: 'POST'
+        });
+    },
+
+    async getAvailableDevices(token) {
+        return await fetchWithAuth(`${API_BASE_URL}/device/pairing`, token, {
+            method: 'GET'
+        })
+    },
+
+    async pairWithDevice(deviceId, token) {
+        return await fetchWithAuth(`${API_BASE_URL}/user/pairing/device`, token, {
+            method: 'POST',
+            body: JSON.stringify({deviceId})
+        });
+    },
+
+    async confirmPairing(deviceId, token) {
+        return await fetchWithAuth(`${API_BASE_URL}/user/pairing/complete`, token, {
+            method: 'POST',
+            body: JSON.stringify({deviceId})
+        });
+    },
+
+    async getDeviceForUser(token) {
+        return await fetchWithAuth(`${API_BASE_URL}/user/pairing/device`, token, {
+            method: 'GET'
+        });
+    },
+
+    async unpairDevice(deviceId, token) {
+        return await fetchWithAuth(`${API_BASE_URL}/user/pairing/disconnect`, token, {
+            method: 'POST',
+            body: JSON.stringify({deviceId})
         });
     },
 
