@@ -1,121 +1,208 @@
-
-# Dokumentation: Rollstuhl Sturzerkennung
+# Dokumentation: Rollstuhl-Sturzerkennung
 
 ## 1. Projektübersicht
-* **Team:** Tim, Henrik, Johann
-* **Organisationsmethode:** Wasserfall
-* **Problemstellung:** Sicherheit von Rollstuhlfahrern bei schlechten Lichtverhältnissen verbessern
-* **Zielgruppe:** Rollstuhlfahrer*innen
 
-## 2. Projektplanung
-### 2.1 Anforderungen (Must/Should/Could)
-| Priorität | Anforderung                                                                                      | Status |
-| :--- |:---| :--- |
-| Must-have | Abstandmessung mit Warntönen ab einer      bestimmten Entfernung                                 | Umgesetzt
-| Must-have | Neigungsensor mit automatischer Benachrichtigung, falls eine bestimmte Neigung überschritten ist | Umgesetzt
-| Must-have | Backend, welches eine E-Mail an eine Kontaktperson schicken kann                                 | Umgesetzt
-| Should-have | Login im Frontend                                                                                | Umgesetzt
-| Should-have | Pflege von Notfallkontaktinformationen im Frontend                                               | Umgesetzt
-| Should-have | Pflege von eigenen Informationen im Frontend                                                     | Umgesetzt
-| Chould-have | Kopplungslogik, mit der ein Gerät dynamisch mit einem Useraccount verbunden werden kann          | Umgesetzt
-| Could-have | Anbringung des 3D-gedruckten Gehäuses unter der Fußleiste                                        | Verworfen
+| Feld | Inhalt |
+| :--- | :--- |
+| **Team** | Tim, Henrik, Johann |
+| **Vorgehensmodell** | Wasserfallmodell |
+| **Problemstellung** | Verbesserung der Sicherheit von Rollstuhlfahrer*innen bei schlechten Lichtverhältnissen |
+| **Zielgruppe** | Rollstuhlfahrer*innen |
 
-### 2.2 Zeitplanung
-* **Gesamtstunden:** 27std.
-* **Wichtigste Meilensteine:**
-    1. Fertigstellung des Hardware-Setups mit allen nötigen Komponenten
-    2. Fertigstellung des Frontends mit Login für beliebig viele Nutzer
-    3. Fertigstellung des Backends mitsamt aller Endpunkte
-    4. Erster erfolgreicher Testdurchlauf
+### 1.1 Rollenverteilung
+| Person | Rolle              | Aufgaben                                                                                              |
+|:-------|:-------------------|:------------------------------------------------------------------------------------------------------|
+| Tim    | Softwareentwickler | Backend (Spring Boot, REST-API), Frontend, Datenbankanbindung (Supabase), E-Mail-Integration (Resend) |
+| Henrik | Hardwareentwickler | Verkabelung, Schaltplanentwurf, Entwicklung eines Gehäuses                                            |
+| Johann | Hardwareentwickler | Sensorintegration (HC-SR04, MPU6050), Komponententests, Buzzer-Logik auf dem ESP32                    |
 
-## 3. Technisches Design (CPS)
-### 3.1 Hardware & Sensorik
-* **Komponenten:** Esp32, MPU6050, HC-SR04, Passiver Buzzer, TM1637, Powerbank
-* **Messwerterfassung:** Mit dem HC-SR04 wird sekündlich ein Abstand, bis zu 2m, gemessen, ab einer Entfernung von 50cm wird mit dem Buzzer ein Ton ausgegeben. Neben dem Abstand wird auch die Neigung sekündlich mit dem MPU6050 gemessen.
-* **Schaltplan:** `![Schaltplan hier einfügen/verlinken]`
+### Zielsetzung
 
-### 3.2 Software & Kommunikation
-* **Logik (Start + Koppeln):**
-
-  ![start_logik.png](img/start_logik.png)
-* **Logik (Notfall):**
-
-  ![notfall_logik.png](img/notfall_logik.png)
-* **Kommunikationswege:** jegliche Kommunikation zwischen den Partnern läuft über HTTPS
-* **Datenverarbeitung:** Die Daten werden über das freie Angebot von "Supabase" in einer eigenen Datenbank abgespeichert
-  * Zugrundeliegendes ERM:
-
-    ![erm.png](img/erm.png)
-## 4. Rechtliches & Nachhaltigkeit
-### 4.1 Datenschutz & Urheberrecht
-* **Datenschutz:**
-  * Es werden von der Person, die den Account anlegt folgende Daten gespeichert:
-    * E-Mail-Adresse (für den Login)
-    * Passwort (verschlüsselt) (für den Login)
-    * Vorname
-    * Nachname
-  * Vom Notfallkontakt werden folgende Daten gespeichert:
-    * Vorname
-    * Nachname
-    * E-Mail-Adresse
-    * Telefonnummer (optional, wäre für Erweiterung auf SMS, WhatsApp wichtig)
-  * Uns ist bewusst, dass 
-    * die Person, die sich das System installiert und einen Account anlegt, nicht ohne Weiteres 
-    die Daten des Notfallkontakts abspeichern darf, hierbei wäre eine Bestätigung des Notfallkontakts erforderlich, der ausdrücklich zustimmt, dass seine Daten dort verwendet werden dürfen
-    
-      → wegen mangelnder Zeit nicht beachtet
-    * die Telefonnummer des Notfallkontakts hier nicht abgespeichert werden dürfte, da diese nicht notwendig ist für die Funktion
-      
-      → dies ist uns nach Implementierung aufgefallen und aus Zeitgründen haben wir es nicht mehr entfernt
-* **Urheberrecht:** 
-  * **Open-Source-Bibliotheken und Frameworks:**
-    * Spring Boot (Web, Security) – Apache License 2.0
-    * OkHttp 4.12.0 – Apache License 2.0
-    * Gson – Apache License 2.0
-    * Supabase Java Client – MIT License
-    * Lombok
-    * Tailwind CSS – MIT License
-
-* **Externe Dienste:**
-  * Supabase – Datenbank-Hosting
-  * Render – Deployment und Hosting
-  * Resend – E-Mail-Versand API
-
-### 4.2 Nachhaltigkeit
-* **Hardware:** 
-  * ESP32:
-    * sehr energieeffizient durch geringen Stromverbrauch
-  * MPU6050:
-    * geringer Stromverbrauch
-    * keine beweglichen Teile → langlebig
-  * HC-SR04:
-    * relativ langlebig, jedoch gegenüber Feuchtigkeit anfällig
-  * Passiver Buzzer
-    * sehr geringer Stromverbrauch
-    * einfache elektronische Bauweise → hohe Lebensdauer
-  * TM1637:
-    * LEDS besitzen eine lange Lebensdauer
-    * Stromverbrauch ist moderat
-  * **Software:**
-    * Geringe Datenlast → geringer Speicherverbrauch + Ladezeit
-    * Kurze Zeitspanne für Kopplung → Pairing-Sessions laufen schnell aus und werden nicht weiter verabeitet
-    * Alle Endpunkte sind ereignisbasiert → keine dauerhaften Hintergrundprozesse
-      
-      → Ausnahme: Gerät fragt Kopplungscode alle 5s an, was aber auf eine maximale Gesamtdauer von 2min begrenzt ist
-
-## 5. Evaluation & Reflexion
-* **Testergebnisse:** Abstand wird mit dem HC-SR04 gemessen, ab 50cm wird mit dem Passiven Buzzer ein Warnton ausgegeben. Der Ton wird lauter je geringer der Abstand wird. Die Neigung mit dem MPU6050 wird gemessen. Mit der grafischen Oberfläche können Notfallkontakte gespeichert werden und getriggert werden. 
-* **Erkenntnisse:** [Was haben wir im Prozess gelernt?]
-* **Ausblick:** [Was könnte in einer Version 2.0 verbessert werden?]
+Rollstuhlfahrer*innen sind in schlecht beleuchteten Umgebungen einem erhöhten Sturzrisiko ausgesetzt, da Hindernisse spät oder gar nicht wahrgenommen werden. Dieses Projekt entwickelt ein eingebettetes System, das Hindernisse frühzeitig erkennt, den Nutzer akustisch warnt und im Falle eines Sturzes automatisch eine Benachrichtigung an eine hinterlegte Kontaktperson sendet.
 
 ---
 
-### Tipps für die Schüler zur Arbeit mit Markdown:
-* **Bilder:** Legt eure Diagramme (Export aus Fritzing, Draw.io etc.) in einen Ordner `img` und verlinkt sie mit `![Titel](img/bildname.png)`.
-* **Code:** Kurze Code-Snippets könnt ihr direkt einbinden:
-    ```cpp
-    if (sensorValue > threshold) {
-      triggerAction();
-    }
-    ```
-* **Tabellen:** Achtet auf die Trennstriche (`|` und `-`), damit die Tabellen korrekt gerendert werden.
+## 2. Projektplanung
+
+### 2.1 Anforderungen (Must / Should / Could)
+
+| Priorität | Anforderung | Status |
+| :--- | :--- | :--- |
+| Must-have | Abstandsmessung mit Warntönen ab einer definierten Entfernung | ✅ Umgesetzt |
+| Must-have | Neigungssensor mit automatischer Benachrichtigung bei Überschreitung eines Schwellenwerts | ✅ Umgesetzt |
+| Must-have | Backend, das bei einem Sturzereignis eine E-Mail an eine Kontaktperson versendet | ✅ Umgesetzt |
+| Should-have | Login-Funktion im Frontend | ✅ Umgesetzt |
+| Should-have | Verwaltung von Notfallkontaktinformationen im Frontend | ✅ Umgesetzt |
+| Should-have | Verwaltung eigener Profilinformationen im Frontend | ✅ Umgesetzt |
+| Could-have | Kopplungslogik zur dynamischen Verknüpfung eines Geräts mit einem Nutzerkonto | ✅ Umgesetzt |
+| Could-have | Anbringung eines 3D-gedruckten Gehäuses unter der Fußstütze | ❌ Verworfen |
+
+### 2.2 Zeitplanung
+
+- **Gesamtaufwand:** ca. 27 Stunden
+
+| Phase              | Meilenstein                                                                               | tatsächlicher Aufwand |
+|:-------------------|:------------------------------------------------------------------------------------------|:----------------------|
+| 1: Entwurf         | Entwurf der Architektur, Komponentenauswahl                                               | 2 Std.            |
+| 2: Implementierung | Hardware-Setup: Verkabelung, Buzzer-Logik auf dem ESP32                                   | 7 Std.            |
+|                    | Backend: REST-API mit Spring Boot, Datenbankanbindung (Supabase), E-Mail-Versand (Resend) | 7 Std.            |
+|                    | Frontend: Login, Profilpflege, Notfallkontaktverwaltung, Kopplungslogik                   | 8 Std.            |
+| 3: Testen          | Integration & Test: End-to-End-Testdurchlauf, Fehlerbehebung, Dokumentation               | 3 Std.            |
+| **Gesamt**         |                                                                                           | **27 Std.**       |
+
+---
+
+## 3. Technisches Design (CPS)
+
+### 3.1 Hardware & Sensorik
+
+**Eingesetzte Komponenten:**
+
+| Komponente | Funktion |
+| :--- | :--- |
+| ESP32 | Mikrocontroller, zentrale Steuereinheit |
+| MPU6050 | Inertialmesseinheit zur Neigungserkennung |
+| HC-SR04 | Ultraschall-Distanzsensor |
+| Passiver Buzzer | Akustische Warnanzeige |
+| TM1637 | 7-Segment-Anzeige |
+| Powerbank | Mobile Stromversorgung |
+
+**Messwerterfassung:**
+
+- Der **HC-SR04** misst sekündlich den Abstand zu Hindernissen (Reichweite bis 2 m). Unterschreitet der gemessene Abstand 50 cm, gibt der Buzzer einen Warnton aus, der mit abnehmendem Abstand lauter wird.
+- Der **MPU6050** erfasst ebenfalls sekündlich die Neigung des Rollstuhls. Überschreitet die Neigung einen definierten Schwellenwert, wird eine Sturzbenachrichtigung ausgelöst.
+
+**Schaltplan:**
+
+![Schaltplan](img/schaltplan.png)
+
+> *Schaltplan als Export aus Fritzing oder vergleichbarem Tool einfügen.*
+
+---
+
+### 3.2 Software & Kommunikation
+
+**Startlogik & Kopplung:**
+
+![Startlogik](img/start_logik.png)
+
+**Notfalllogik:**
+
+![Notfalllogik](img/notfall_logik.png)
+
+**Kommunikation:**
+
+Die gesamte Kommunikation zwischen den Systemkomponenten erfolgt verschlüsselt über **HTTPS**.
+
+**Datenhaltung:**
+
+Die anfallenden Daten werden über den kostenlosen Tier des Dienstleisters **Supabase** in einer PostgreSQL-Datenbank gespeichert.
+
+**Sequenzdiagramm – Sturzbenachrichtigung:**
+
+Das folgende Sequenzdiagramm zeigt den vollständigen Ablauf vom Sturzereignis bis zur E-Mail-Benachrichtigung:
+
+![SEQUENZ_UNFALL](img/sequenz_unfall.png)
+
+
+**Entity-Relationship-Modell (ERM):**
+
+![ERM](img/erm.png)
+
+---
+
+## 4. Rechtliches & Nachhaltigkeit
+
+### 4.1 Datenschutz
+
+**Gespeicherte Nutzerdaten (Accountinhaber):**
+- E-Mail-Adresse (Login)
+- Passwort (verschlüsselt gespeichert)
+- Vorname und Nachname
+
+**Gespeicherte Daten des Notfallkontakts:**
+- Vorname und Nachname
+- E-Mail-Adresse
+- Telefonnummer *(optional; für eine spätere Erweiterung auf SMS- oder WhatsApp-Benachrichtigungen vorgesehen)*
+
+**Bekannte datenschutzrechtliche Mängel:**
+
+1. **Einwilligung des Notfallkontakts:** Die Speicherung personenbezogener Daten eines Notfallkontakts setzt dessen ausdrückliche Einwilligung voraus (Art. 6 DSGVO). Eine entsprechende Bestätigungslogik wurde aus Zeitgründen nicht implementiert und muss in einer Folgeversion nachgerüstet werden.
+
+2. **Datensparsamkeit (Telefonnummer):** Die Speicherung der Telefonnummer ist für die aktuelle Funktionalität nicht erforderlich und verstößt damit gegen das Prinzip der Datensparsamkeit (Art. 5 Abs. 1 lit. c DSGVO). Das Feld wurde nach Implementierung identifiziert, konnte jedoch aus Zeitgründen nicht mehr entfernt werden.
+
+### 4.2 Urheberrecht
+
+**Eingesetzte Open-Source-Bibliotheken und Frameworks:**
+
+| Bibliothek / Framework | Lizenz |
+| :--- | :--- |
+| Spring Boot (Web, Security) | Apache License 2.0 |
+| OkHttp 4.12.0 | Apache License 2.0 |
+| Gson | Apache License 2.0 |
+| Supabase Java Client | MIT License |
+| Lombok | MIT License |
+| Tailwind CSS | MIT License |
+
+**Externe Dienste:**
+
+| Dienst | Verwendungszweck |
+| :--- | :--- |
+| Supabase | Datenbank-Hosting (PostgreSQL) |
+| Render | Deployment und Hosting des Backends |
+| Resend | API-basierter E-Mail-Versand |
+
+### 4.3 Nachhaltigkeit
+
+**Hardware:**
+
+| Komponente | Nachhaltigkeitsbewertung |
+| :--- | :--- |
+| ESP32 | Sehr energieeffizient durch niedrigen Ruhestromverbrauch |
+| MPU6050 | Geringer Stromverbrauch, keine beweglichen Teile → hohe Lebensdauer |
+| HC-SR04 | Robust, jedoch anfällig gegenüber Feuchtigkeit |
+| Passiver Buzzer | Minimaler Stromverbrauch, einfache Bauweise → hohe Lebensdauer |
+| TM1637 | LED-basierte Anzeige mit langer Lebensdauer, moderater Verbrauch |
+| Powerbank | Wiederaufladbarer Akku als Stromquelle → kein Einwegbatterien-Verbrauch, flexibel einsetzbar und austauschbar |
+
+Die Wahl einer **Powerbank als mobile Stromversorgung** ist bewusst auf Nachhaltigkeit ausgerichtet: Im Vergleich zu Einwegbatterien ist sie wiederaufladbar, langlebig und lässt sich bei Defekt einfach ersetzen, ohne die gesamte Hardware austauschen zu müssen.
+
+**Software:**
+
+- Geringe Datenlast → niedriger Speicher- und Energieverbrauch
+- Kurze Gültigkeitsdauer von Kopplungssessions (max. 2 Minuten) → keine unnötige Ressourcenbindung
+- Alle Backend-Endpunkte sind ereignisbasiert → keine dauerhaften Hintergrundprozesse
+  - *Ausnahme:* Das Gerät fragt den Kopplungscode alle 5 Sekunden ab, was auf eine Gesamtdauer von maximal 2 Minuten begrenzt ist.
+
+---
+
+## 5. Evaluation & Reflexion
+
+### 5.1 Testergebnisse
+
+| Funktion | Ergebnis |
+| :--- | :--- |
+| Abstandsmessung (HC-SR04) | ✅ Funktioniert; Buzzer gibt ab 50 cm einen Warnton aus, der mit sinkendem Abstand lauter wird |
+| Neigungsmessung (MPU6050) | ✅ Neigung wird korrekt erfasst und ausgewertet |
+| Sturzbenachrichtigung per E-Mail | ✅ Backend sendet bei Überschreitung des Neigungsschwellenwerts eine E-Mail an den hinterlegten Notfallkontakt |
+| Frontend – Notfallkontaktverwaltung | ✅ Daten können angelegt und bearbeitet werden |
+| Frontend – Profilverwaltung | ✅ Eigene Daten können gepflegt werden |
+| Kopplungslogik | ✅ Gerät lässt sich zuverlässig mit einem Nutzerkonto verknüpfen |
+
+### 5.2 Erkenntnisse
+
+- Die Umsetzung im Wasserfallmodell hat sich für ein Projekt dieser Größe bewährt, da die Anforderungen von Beginn an klar definiert waren. Bei häufigen Änderungen wäre ein agiles Vorgehen sinnvoller gewesen.
+- Die Entscheidung, Supabase als Datenbankdienst zu nutzen, hat die Entwicklung deutlich beschleunigt, schränkt jedoch die Kontrolle über die Datenhaltung ein.
+- Datenschutzrechtliche Aspekte sollten von Beginn an in die Planung einbezogen werden, um nachträgliche Korrekturen zu vermeiden.
+- Die Tonsignalisierung mit variierender Lautstärke hat sich als intuitiv und wirksam erwiesen.
+
+### 5.3 Ausblick (Version 2.0)
+
+Folgende Erweiterungen sind für eine zukünftige Version denkbar:
+
+- **DSGVO-konforme Einwilligungslösung:** Notfallkontakte sollen aktiv zustimmen müssen, bevor ihre Daten gespeichert werden.
+- **SMS- und WhatsApp-Benachrichtigung:** Nutzung der bereits gespeicherten Telefonnummer für alternative Benachrichtigungskanäle.
+- **3D-gedrucktes Gehäuse:** Wetterfestes Gehäuse zur Montage unter der Fußstütze des Rollstuhls.
+- **Verbesserte Sturzerkennung:** Auswertung mehrerer Achsen und Beschleunigungsdaten des MPU6050 für eine zuverlässigere Sturzklassifikation (z. B. Differenzierung zwischen absichtlichem Neigen und echtem Sturz).
+- **Mobile App:** Entwicklung einer Companion-App zur komfortableren Konfiguration und Alarmierung in Echtzeit.
+- **Akku-Monitoring:** Anzeige des Ladestands der Powerbank im Frontend, um unerwartete Ausfälle zu verhindern.
