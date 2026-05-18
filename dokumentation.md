@@ -94,6 +94,44 @@ Rollstuhlfahrer*innen sind in schlecht beleuchteten Umgebungen einem erhöhten S
 
 Die gesamte Kommunikation zwischen den Systemkomponenten erfolgt verschlüsselt über **HTTPS**.
 
+```cpp
+@PostMapping("/device/trigger")
+    public ResponseEntity<?> triggerDeviceEmergency(@RequestBody TriggerRequest request) {
+
+        if (!request.triggerSecret().equals(triggerSecret)) return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", "Nicht autorisiert"));
+
+        try {
+            Optional<Device> existing = supabaseService.getDeviceById(request.deviceId());
+
+            if (existing.isEmpty()) return ResponseEntity.status(404).body(Map.of("error", "Gerät nicht bekannt"));
+
+            Device device = existing.get();
+            if (!device.status().equals(Status.PAIRED) || device.userId() == null || device.userId().isEmpty()) return ResponseEntity.badRequest().body(Map.of("error", "Device ist nicht paired"));
+
+            EmergencyContact contact = supabaseService.getEmergencyContact(device.userId(), triggerSecret);
+            UserInformation userInformation = supabaseService.getUserInformation(device.userId(), triggerSecret);
+
+            if (contact == null || userInformation == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Kein Notfallkontakt/Userinformation hinterlegt"));
+            }
+
+            /// E-Mail senden
+            emailService.sendEmergencyNotification(
+                    contact,
+                    userInformation.getFirstName() + " " + userInformation.getLastName()
+            );
+
+            return ResponseEntity.ok(Map.of(
+                    "message", "Notfall-Benachrichtigung versendet",
+                    "recipient", contact.getContactEmail()
+            ));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Fehler beim Trigger: " + e.getMessage()));
+        }
+    }
+```
+
 **Datenhaltung:**
 
 Die anfallenden Daten werden über den kostenlosen Tier des Dienstleisters **Supabase** in einer PostgreSQL-Datenbank gespeichert.
