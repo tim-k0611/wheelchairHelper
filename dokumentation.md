@@ -13,8 +13,8 @@
 | Person | Rolle              | Aufgaben                                                                                              |
 |:-------|:-------------------|:------------------------------------------------------------------------------------------------------|
 | Tim    | Softwareentwickler | Backend (Spring Boot, REST-API), Frontend, Datenbankanbindung (Supabase), E-Mail-Integration (Resend) |
-| Henrik | Hardwareentwickler | Verkabelung, Schaltplanentwurf, Entwicklung eines Gehäuses                                            |
-| Johann | Hardwareentwickler | Sensorintegration (HC-SR04, MPU6050), Komponententests, Buzzer-Logik auf dem ESP32                    |
+| Henrik | Hardwareentwickler | Verkabelung, Schaltplanentwurf, Entwicklung eines Gehäuses, Sensorintegration (HC-SR04, MPU6050)      |
+| Johann | Hardwareentwickler | Komponententests, Buzzer-Logik auf dem ESP32                                                          |
 
 ### Zielsetzung
 
@@ -75,8 +75,6 @@ Rollstuhlfahrer*innen sind in schlecht beleuchteten Umgebungen einem erhöhten S
 **Schaltplan:**
 
 ![Schaltplan](img/schaltplan.png)
-
-> *Schaltplan als Export aus Fritzing oder vergleichbarem Tool einfügen.*
 
 ---
 
