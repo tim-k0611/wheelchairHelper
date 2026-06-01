@@ -217,7 +217,7 @@ public class EmergencyController {
 
         try {
             Optional<PairingSession> existing = supabaseService.getPairingSessionForUser(userId, userToken);
-            if (existing.isEmpty() || OffsetDateTime.parse(existing.get().expiresAt()).isBefore(OffsetDateTime.now(ZoneOffset.UTC))) return ResponseEntity.status(404).body(Map.of("error", "Fehler beim Senden des Codes: Pairing Session ist abgelaufen"));
+            if (existing.isEmpty() || OffsetDateTime.parse(existing.get().expiresAt()).isBefore(OffsetDateTime.now(ZoneOffset.UTC))) return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Fehler beim Senden des Codes: Pairing Session ist abgelaufen"));
 
             PairingSession session = existing.get();
 

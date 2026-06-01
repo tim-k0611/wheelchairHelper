@@ -57,6 +57,8 @@ const EmergencyContactApp = () => {
 
         if (session?.access_token) {
             loadContact(session.access_token);
+            loadUserInfo(session.access_token);
+            loadPairedDevice(session.access_token);
         }
     };
 
@@ -285,6 +287,7 @@ const EmergencyContactApp = () => {
         setMessage({type: 'success', text: 'Erfolgreich abgemeldet'});
         setUserMessage(null);
         setCredentials({email: '', password: ''});
+        setPairedDevice(null);
     };
 
     if (!user) {
