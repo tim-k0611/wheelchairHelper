@@ -675,17 +675,6 @@ const EmergencyContactApp = () => {
                         </button>
                     )}
                 </div>
-
-                {/* Info Box */}
-                <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl p-6">
-                    <h3 className="font-semibold text-blue-900 mb-2">🔐 Wie funktioniert das?</h3>
-                    <ul className="text-sm text-blue-800 space-y-1">
-                        <li>• Deine Daten werden verschlüsselt bei Supabase gespeichert</li>
-                        <li>• Der Notfall-Endpoint kann per HTTP POST ausgelöst werden</li>
-                        <li>• Bei Auslösung wird automatisch eine E-Mail versendet</li>
-                        <li>• Test-E-Mail wird beim Speichern versendet</li>
-                    </ul>
-                </div>
             </div>
         </div>
     );
